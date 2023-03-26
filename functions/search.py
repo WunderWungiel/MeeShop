@@ -32,9 +32,7 @@ def search(db, query, addr):
         return "Break"
     clean()
 
-    print(numbers)
     print()
-    print(results)
 
     print("  -------------------------------------- ")
     print(" |                                      |")
