@@ -13,6 +13,15 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
+def init(lang):
+    global strings
+    if lang == "en":
+        from langs.en import Strings
+    elif lang == "ru":
+        from langs.ru import Strings
+
+    strings = Strings()
+
 def rss():
 
     countries_numbers = []
@@ -26,29 +35,30 @@ def rss():
     
     while True:
         clean()
-        print("  -------------------------------------- ")
-        print(" |                                      |")
-        print(" |              RSS feeds:              |")    
-        print(" |                                      |")
+        strings.rss_feeds()
         for i, name in zip(countries_numbers, countries_names):
                 country = "{}. {}".format(i, name)
                 lenght = " " * int((38 - 10 - len(country)))
                 print(" |          {}{}|".format(country, lenght))
-        print(" |                                      |")
-        print(" |          0. Return                   |")
-        print(" |                                      |")
-        print("  -------------------------------------- \n")
+        strings.rss_feeds_return()
         
-        country = input(" {}Select a country (digit):{} ".format(yellow, reset))
+        country = strings.select_a_country_digit()
         if country == "0":
             clean()
             return
         if country not in countries_numbers:
-            print(" {}Wrong number!{}".format(red, reset))
+            strings.wrong_number()
             time.sleep(2)
             continue
         else:
-            break
+            pass
+
+        while True:
+            _ = country_feeds(country=country, countries_names=countries_names, countries_numbers=countries_numbers)
+            if _ == "Break":
+                break
+
+def country_feeds(country, countries_names, countries_numbers):
 
     while True:
 
@@ -61,26 +71,20 @@ def rss():
             links = re.findall("\| (http.+)", r)
 
         clean()
-        print("  -------------------------------------- ")
-        print(" |                                      |")
-        print(" |           Feeds for {}:          |".format(country_name))
-        print(" |                                      |")
+        strings.feeds_for(country_name)
         for i, name in zip(numbers, names):
             feed = "{}. {}".format(i, name)
             lenght = " " * int((38 - 5 - len(feed)))
             print(" |     {}{}|".format(feed, lenght))
-        print(" |                                      |")
-        print(" |     0. Return                        |")
-        print(" |                                      |")
-        print("  -------------------------------------- \n")
+        strings.feeds_for_return()
 
         while True:
-            selected = input(" {}Select a feed:{} ".format(yellow, reset))
+            selected = strings.select_a_feed()
             if selected == "0":
                 clean()
-                return
+                return "Break"
             if not selected.isnumeric() or selected not in numbers:
-                print(" {}Wrong number!{}".format(red, reset))
+                strings.wrong_number()
                 time.sleep(2)
                 continue
             else:
@@ -90,5 +94,5 @@ def rss():
 
         subprocess.Popen("/usr/bin/invoker --type=m /usr/bin/grob {} > /dev/null 2>&1".format(link), shell=True)
         time.sleep(1.5)
-        input(" {}{}Press any key to continue... {}".format(blink, cyan, reset))
+        strings.press_enter_to_continue()
         continue

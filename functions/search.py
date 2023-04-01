@@ -3,6 +3,7 @@ import urllib
 import os
 from urllib.request import urlopen
 import subprocess
+
 from .cleaner import cleaner
 from .clean import clean
 
@@ -14,8 +15,17 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
+def init(lang):
+    global strings
+    if lang == "en":
+        from langs.en import Strings
+    elif lang == "ru":
+        from langs.ru import Strings
+
+    strings = Strings()
+
 def search(db, query, addr):
-    
+
     print()
 
     numbers = []
@@ -27,17 +37,14 @@ def search(db, query, addr):
         numbers.append(str(i))
 
     if len(results) == 0:
-        print(" {}No apps found!{}".format(red, reset))
-        input(" \n {}{}Press any key to continue...{}".format(blink, cyan, reset))
+        strings.no_apps_found()
+        strings.press_enter_to_continue()
         return "Break"
     clean()
 
     print()
 
-    print("  -------------------------------------- ")
-    print(" |                                      |")
-    print(" |            Search results:           |")
-    print(" |                                      |")
+    strings.search_results()
     for i, pkg in zip(numbers, results):
         _result = "{}. {}".format(i, pkg)
         lenght = " " * int((38 - 2 - len(_result)))
@@ -45,7 +52,7 @@ def search(db, query, addr):
     print(" |                                      |")
     print("  -------------------------------------- \n")
     while True:
-        ask = input(" {}Type numbers, ALL or 0:{} ".format(yellow, reset))
+        ask = strings.ask_for_results()
         print()
         todl = ask.split(" ")
         todl = list(set(todl))
@@ -60,14 +67,14 @@ def search(db, query, addr):
                 filename = "{} {}.deb".format(pkg, db[pkg])
                 url = "wunderwungiel.pl/MeeGo/Repository/{}/{}".format(addr, filename)
                 url = "http://" + urllib.parse.quote(url)
-                print(" {}{}WAIT!{}{} Downloading...\n{}".format(red, blink, reset, red, reset))
+                strings.wait_downloading()
                 with urlopen(url) as response:
                     _content = response.read()
                 with open(cleaner(filename), "wb") as f:
                     f.write(_content)
-                print(" Saved {}!\n".format(filename))
+                strings.saved(filename)
 
-            print(" Installing...")
+            strings.installing()
             print(" ")
             for pkg in results:
                 filename = "{} {}.deb".format(pkg, db[pkg])
@@ -77,15 +84,15 @@ def search(db, query, addr):
                 subprocess.call(command, shell=True)
 
                 print(" ")
-                print(" {}{} installed!{}".format(green, pkg, reset))
+                strings.installed(pkg)
 
             print()
-            input(" {}{}Press any key to continue... {}".format(blink, cyan, reset))
+            strings.press_enter_to_continue()
             clean()
             return "Break"
         
         if ask != "a" and not all(num in numbers for num in todl):
-            print(" {}Wrong number, select a correct one(s)!{}".format(red, reset))
+            strings.wrong_number()
             print(" ")
             continue
         else:
@@ -94,12 +101,12 @@ def search(db, query, addr):
                 filename = "{} {}.deb".format(pkg, db[pkg])
                 url = "wunderwungiel.pl/MeeGo/Repository/{}/{}".format(addr, filename)
                 url = "http://" + urllib.parse.quote(url)
-                print(" {}{}WAIT!{}{} Downloading...\n{}".format(red, blink, reset, red, reset))
+                strings.wait_downloading()
                 with urlopen(url) as response:
                     _content = response.read()
                 with open(cleaner(filename), "wb") as f:
                     f.write(_content)
-                print(" Saved {}!\n".format(filename))
+                strings.saved(filename)
 
             for i in todl:
                 pkg = results[numbers.index(i)]
@@ -109,10 +116,10 @@ def search(db, query, addr):
                 command = 'aegis-dpkg -i "{}" > /dev/null'.format(filepath)
                 subprocess.call(command, shell=True)
                 print(" ")
-                print(" {}{} installed!{}".format(green, pkg, reset))
+                strings.installed(pkg)
 
             print()
-            input(" {}{}Press any key to continue... {}".format(blink, cyan, reset))
+            strings.press_enter_to_continue()
             clean()
             return "Break"
  

@@ -10,36 +10,28 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
-def options(db, addr):
+def init(lang):
+    global strings
+    if lang == "en":
+        from langs.en import Strings
+    elif lang == "ru":
+        from langs.ru import Strings
+
+    strings = Strings()
+
+def options(db, addr, name):
+
     while True:
         while True:
             clean()
-            print("  -------------------------------------- ")
-            print(" |                                      |")
-            print(" |         Welcome to {}MeeShop{}!          |".format(cyan, reset))
-            print(" |                                      |")
-            cat = "{}".format(addr)
-            if len(cat) % 2 != 0:
-                cat = cat + " "
-            lenght = " " * int((38 - len(cat)) / 2) 
-            print(" |{}{}{}{}{}{}|".format(lenght, blink, cyan, cat, reset, lenght))
-            print(" |                                      |")
-            print(" |          Select an option:           |")
-            print(" |                                      |")
-            print(" |             1. Search                |")
-            print(" |             2. Show apps             |")
-            print(" |             3. Return                |")
-            print(" |                                      |")
-            print(" |             0. Exit                  |")
-            print(" |                                      |")
-            print("  -------------------------------------- \n")
+            strings.options_selection_list(name)
             option = input(" ")
             if not option:
                 clean()
                 continue
             print()
             if option not in ["1", "2", "3", "0"]:
-                print(" {}Wrong number, select a correct one!{}".format(red, reset))
+                strings.wrong_number()
                 print(" ")
                 continue
             else:
@@ -47,12 +39,8 @@ def options(db, addr):
 
         if option == "1":
             clean()
-            print("  -------------------------------------- ")
-            print(" |                                      |")
-            print(" |        Enter query, 0 to return:     |")
-            print(" |                                      |")
-            print("  -------------------------------------- \n")
-            query = input(" {}Query to search:{} ".format(yellow, reset))
+            strings.enter_query_0()
+            query = strings.query_to_search()
             if not query:
                 clean()
                 continue
@@ -65,10 +53,7 @@ def options(db, addr):
 
         elif option == "2":
             clean()
-            print("  -------------------------------------- ")
-            print(" |                                      |")
-            print(" |           List of packages:          |")
-            print(" |                                      |")
+            strings.show_apps_list()
             for pkg in db.keys():
 
                 if len(pkg) % 2 != 0:
@@ -78,7 +63,7 @@ def options(db, addr):
             
             print(" |                                      |")
             print("  -------------------------------------- \n")
-            input(" {}{}Press any key to continue... {}".format(blink, cyan, reset))
+            strings.press_enter_to_continue()
             clean()
             continue
 

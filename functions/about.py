@@ -1,4 +1,4 @@
-import subprocess
+from .clean import clean
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -17,7 +17,10 @@ def init(lang):
 
     strings = Strings()
 
-def apt_fixer():
+def about():
 
-    subprocess.call("aegis-apt-get install -f", shell=True)
+    clean()
+
+    strings.about()
     strings.press_enter_to_continue()
+    clean()
