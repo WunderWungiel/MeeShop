@@ -1,13 +1,13 @@
-import re
 import sys
 
 from .clean import clean
 from .options import options
-from .aptfixer import apt_fixer
+from .apt import Apt
 from .rss import rss
 from .about import about
-from .language import language
+from .re_decoder import re_decoder
 
+from .search import Search
 blue = '\033[96m'
 red = '\033[31m'
 reset = '\033[0m'
@@ -16,21 +16,39 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
-def init(lang):
-    global strings
-    if lang == "en":
-        from langs.en import Strings
-    elif lang == "ru":
-        from langs.ru import Strings
-
-    strings = Strings()
+def init(database):
+    global db
+    global apt
+    global search
+    db = database
+    apt = Apt()
+    search = Search()
 
 def category():
 
     while True:
         clean()
-        strings.category_selection_list()
-        supported = range(0, 8)
+        print(" ┌──────────────────────────────────────┐")
+        print(" │                                      │")
+        print(" │       ╔═══════════════════════╗      │")
+        print(" │       ║  Welcome to {}MeeShop{}!  ║      │".format(cyan, reset))
+        print(" │       ╚═══════════════════════╝      │")
+        print(" │                                      │")
+        print(" │       {}Select category / option{}       │".format(blink, reset))
+        print(" │                                      │")
+        print(" │         1. Applications              │")
+        print(" │         2. Ovi Store                 │")
+        print(" │                                      │")
+        print(" │         3. RSS Feeds                 │")
+        print(" │         4. APT fixer                 │")
+        print(" │                                      │")
+        print(" │         5. Check for updates         │")
+        print(" │         6. About                     │")
+        print(" │                                      │")
+        print(" │         0. Exit                      │")
+        print(" │                                      │")
+        print(" └──────────────────────────────────────┘ \n")
+        supported = range(0, 7)
         category = input(" ")
         print()
         if not category:
@@ -42,56 +60,56 @@ def category():
             break
     
     if category == "1":
-        db_name = "apps.txt"
-        addr = "Applications"
-        name = strings.categories.applications()
+        
+        while True:
+            _ = options(db)
+            if _ == "Break":
+                clean()
+                break
+
     elif category == "2":
-        db_name = "games.txt"
-        addr = "Games"
-        name = strings.categories.games()
+
+        while True:
+            while True:
+                clean()
+                print(" ┌──────────────────────────────────────┐")
+                print(" │                                      │")
+                print(" │             ╔══════════╗             │")
+                print(" │             ║  Search: ║             │")
+                print(" │             ╚══════════╝             │")
+                print(" │                                      │")
+                print(" └──────────────────────────────────────┘ \n")
+                query = input(" {}Query to search:{} ".format(yellow, reset))
+                if not query:
+                    clean()
+                    continue
+                if query == "0":
+                    clean()
+                    return "Break"
+                else:
+                    break
+            query = re_decoder(query)
+            search.ovi_search(query=query)
+            clean()
+
     elif category == "3":
-        db_name = "personalisation.txt"
-        addr = "Personalisation"
-        name = strings.categories.personalisation()
-    elif category == "4":
         rss()
         clean()
         return
-    elif category == "5":
-        apt_fixer()
+    elif category == "4":
+        apt.fix()
         clean()
         return
     
-    elif category == "6":
-        language()
+    elif category == "5":
+        apt.meeshop_update(db=db)
         clean()
         return
 
-    elif category == "7":
+    elif category == "6":
         about()
         clean()
         return
     else:
         clean()
         sys.exit(0)
-
-    with open(db_name, 'r') as f:  # open file for reading
-        lines = f.readlines()
-    
-    db = {}
-
-    for line in lines:
-        package = re.search("(.+) v\d", line)
-        if package:
-            package = package.group(1)
-        version = re.search(".+ (v\d.+)", line)
-        if package:
-            version = version.group(1)
-
-        db[package] = version
-
-    while True:
-        _ = options(db, addr, name)
-        if _ == "Break":
-            clean()
-            break 

@@ -4,17 +4,13 @@ import os
 from urllib.request import urlopen
 import sys
 import subprocess
-import re
+from xml.etree import ElementTree as ET
 
 from functions.clean import clean
 from functions.category import category
-import functions.about
-import functions.aptfixer
 import functions.category
-import functions.language
-import functions.options
-import functions.rss
 import functions.search
+import functions.options
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -37,40 +33,11 @@ def main():
     
     os.chdir(folder)
 
-    if os.path.isfile(".config"):
-        with open(".config", "r") as f:
-            lang = re.search("lang = (.{2})", f.read())
-            if lang:
-                lang = lang.group(1)
-        if not lang in ["en", "ru"]:
-            lang = "en"
-            with open(".config", "w") as f:
-                f.write("lang = en")
-    else:
-        with open(".config", "w") as f:
-            f.write("lang = en")
-        lang = "en"
-
-    if lang == "en":
-        from langs.en import Strings
-    elif lang == "ru":
-        from langs.ru import Strings
-
-    strings = Strings()
-
-    functions.about.init(lang)
-    functions.aptfixer.init(lang)
-    functions.category.init(lang)
-    functions.language.init(lang)
-    functions.options.init(lang)
-    functions.rss.init(lang)
-    functions.search.init(lang)
-
     _ = subprocess.call("ping wunderwungiel.pl -c 2 > /dev/null 2>&1", shell=True)
     if _ != 0:
-        strings.something_wrong_with_internet_connection()
+        print(" {}Failed to connect, please\n check your internet connection.{}".format(red, reset))
         print()
-        strings.press_enter_to_continue()
+        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
         clean()
         sys.exit(1)
 
@@ -79,16 +46,47 @@ def main():
             os.remove(f)
 
     if not os.path.exists("/usr/bin/aegis-apt-get"):
-        strings.aegis_hack_not_found()
+        print(" {}Aegis-install hack by CODeRUS needs to be installed.{}".format(red, reset))
+        print(" Get it here:")
         print(" http://wunderwungiel.pl/MeeGo/apt-repo/pool/main/hack-installer_1.0.10_armel.deb")
         print(" ")
         sys.exit(1)
+
+    r = urlopen("http://wunderwungiel.pl/MeeGo/openrepos/catalog.xml")
+    with open("catalog.xml", "w") as f:
+        f.write(r.read().decode("utf-8"))
+
+    r= urlopen("http://wunderwungiel.pl/MeeGo/.database/Ovi.txt")
+    with open("Ovi.txt", "w") as f:
+        f.write(r.read().decode("utf-8"))
+    with open("Ovi.txt", "r") as f:
+        ovi_db = f.readlines()
+
+    tree = ET.parse('catalog.xml')
+    root = tree.getroot()
+
+    db = {}
+
+    for app in root.findall('app'):
+        package = app.find('data').get('package')
+        display_name = app.find('data').get('name')
+        developer = app.find('data').get('dev')
+        version = app.find('data').get('ver')
+        file = app.find('data').get('deb')
+        size = app.find('data').get('size')
     
-    for db_name in ["apps.txt", "games.txt", "personalisation.txt"]:
-        with urlopen("http://wunderwungiel.pl/MeeGo/.database/{}".format(db_name)) as response:
-            _db = response.read().decode("utf-8")
-        with open(db_name, "w") as f:
-            f.write(_db)
+        db[package] = {
+            'file': file,
+            'version': version,
+            'developer': developer,
+            'package': package,
+            'display_name': display_name,
+            'size': size
+        }
+
+    functions.category.init(db)
+    functions.search.init(_ovi_db=ovi_db)
+    functions.options.init()
 
     while True:
         category()

@@ -1,6 +1,6 @@
-import sys
 from .clean import clean
-from .search import search
+from .search import Search
+from .re_decoder import re_decoder
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -10,28 +10,36 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
-def init(lang):
-    global strings
-    if lang == "en":
-        from langs.en import Strings
-    elif lang == "ru":
-        from langs.ru import Strings
+def init():
+    global search
+    search = Search()
 
-    strings = Strings()
-
-def options(db, addr, name):
+def options(db):
 
     while True:
         while True:
             clean()
-            strings.options_selection_list(name)
+            print(" ┌──────────────────────────────────────┐")
+            print(" │                                      │")
+            print(" │       ╔═══════════════════════╗      │")
+            print(" │       ║  Welcome to {}MeeShop{}!  ║      │".format(cyan, reset))
+            print(" │       ╚═══════════════════════╝      │")
+            print(" │                                      │")
+            print(" │          Select an option:           │")
+            print(" │                                      │")
+            print(" │             1. Search                │")
+            print(" │             2. Show apps             │")
+            print(" │                                      │")
+            print(" │             0. Return                │")
+            print(" │                                      │")
+            print(" └──────────────────────────────────────┘ \n")
             option = input(" ")
             if not option:
                 clean()
                 continue
             print()
-            if option not in ["1", "2", "3", "0"]:
-                strings.wrong_number()
+            if option not in ["1", "2", "0"]:
+                print(" {}Wrong number, select a correct one!{}".format(red, reset))
                 print(" ")
                 continue
             else:
@@ -39,8 +47,14 @@ def options(db, addr, name):
 
         if option == "1":
             clean()
-            strings.enter_query_0()
-            query = strings.query_to_search()
+            print(" ┌──────────────────────────────────────┐")
+            print(" │                                      │")
+            print(" │             ╔══════════╗             │")
+            print(" │             ║  Search: ║             │")
+            print(" │             ╚══════════╝             │")
+            print(" │                                      │")
+            print(" └──────────────────────────────────────┘ \n")
+            query = input(" {}Query to search:{} ".format(yellow, reset))
             if not query:
                 clean()
                 continue
@@ -48,27 +62,30 @@ def options(db, addr, name):
                 clean()
                 continue
             else:
-                search(db=db, query=query, addr=addr)
+                query = re_decoder(query)
+                search.search(db=db, query=query)
                 clean()
 
         elif option == "2":
             clean()
-            strings.show_apps_list()
+            print(" ┌──────────────────────────────────────┐")
+            print(" │                                      │")
+            print(" │         ╔════════════════════╗       │")
+            print(" │         ║  List of packages: ║       │")
+            print(" │         ╚════════════════════╝       │")
+            print(" │                                      │")
             for pkg in db.keys():
-
+                pkg = db[pkg]['display_name']
                 if len(pkg) % 2 != 0:
                     pkg = pkg + " "
                 lenght = " " * int((38 - len(pkg)) / 2)
-                print(" |{}{}{}|".format(lenght, pkg, lenght))
+                print(" │{}{}{}│".format(lenght, pkg, lenght))
             
-            print(" |                                      |")
-            print("  -------------------------------------- \n")
-            strings.press_enter_to_continue()
+            print(" │                                      │")
+            print(" └──────────────────────────────────────┘ \n")
+            input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
             clean()
             continue
 
-        elif option == "3":
-            return "Break"
         elif option == "0":
-            clean()
-            sys.exit(0) 
+            return "Break"

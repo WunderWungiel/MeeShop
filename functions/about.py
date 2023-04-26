@@ -8,19 +8,31 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
-def init(lang):
-    global strings
-    if lang == "en":
-        from langs.en import Strings
-    elif lang == "ru":
-        from langs.ru import Strings
-
-    strings = Strings()
-
 def about():
 
     clean()
 
-    strings.about()
-    strings.press_enter_to_continue()
+    print(" ┌──────────────────────────────────────┐")
+    print(" │                                      │")
+    print(" │      MeeShop© 2023 WunderWungiel     │")
+    print(" │            Version: 0.1.0            │")
+    print(" │                                      │")
+    print(" │      App store for MeeGo Harmattan   │")
+    print(" │      written using Python 3.1.       │")
+    print(" │                                      │")
+    print(" │      Special thanks to:              │")
+    print(" │                                      │")
+    print(" │        - IarChep                     │")
+    print(" │      (icon, Russian translation,     │")
+    print(" │   inexhaustible help and ingenuity!) │")
+    print(" │        - Python                      │")
+    print(" │        - tqdm developers             │")
+    print(" │        - LM World community          │")
+    print(" │                                      │")
+    print(" │      Join our Telegram group:        │")
+    print(" │                                      │")
+    print(" │    https://t.me/linuxmobile_world    │")
+    print(" │                                      │")
+    print(" └──────────────────────────────────────┘ \n")
+    input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
     clean()
