@@ -2,6 +2,12 @@
 
 **MeeShop** is a **brand-new**, **working** app store for Nokia N9 / N950 devices running MeeGo Harmattan. MeeShop uses [WunderRepo](http://wunderwungiel.pl/MeeGo/Repository) as its database.
 
+
+ - [x] OpenRepos
+ - [x] Ovi Store
+ - [ ] Automatic dependencies resolving
+
+
 ## Installing
 
 You need to have [Developer Mode](http://wunderwungiel.pl/MeeGo/posts/devmode-22.04.2023.html) enabled and [Aegis-hack](https://talk.maemo.org/showthread.php?t=90750).
