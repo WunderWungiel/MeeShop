@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.1
 
 import os
 from urllib.request import urlopen
