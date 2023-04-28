@@ -1,6 +1,12 @@
 # MeeShop
 
-**MeeShop** is a **brand-new**, **working** app store for Nokia N9 / N950 devices running MeeGo Harmattan. MeeShop uses [WunderRepo](http://wunderwungiel.pl/MeeGo/Repository) as its database.
+**MeeShop** is a **brand-new**, **working** app store for Nokia N9 / N950 devices running MeeGo Harmattan. MeeShop uses [OpenRepos](http://openrepos.net) as its database.
+
+
+ - [x] OpenRepos
+ - [x] Ovi Store
+ - [ ] Automatic dependencies resolving
+
 
 ## Installing
 
@@ -9,7 +15,7 @@ Python needs to be installed. Run **Terminal**, and type following commands:
 
     devel-su
     (enter "rootme" without quotes as password)
-    aegis-apt-get install python3 python3.1
+    aegis-apt-get install python3 python3.1 -y
 
 Download latest release (`.deb` file) from [Releases](https://github.com/WunderWungiel/MeeShop/releases) page, and transfer it to N9, saving in **MyDocs** (i.e. **Nokia N9** drive when connected to PC).
 Run the **Terminal** again, and type following commands:
