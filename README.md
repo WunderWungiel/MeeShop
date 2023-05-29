@@ -15,7 +15,7 @@ Python needs to be installed. Run **Terminal**, and type following commands:
 
     devel-su
     (enter "rootme" without quotes as password)
-    aegis-apt-get install python3 python3.1 -y
+    aegis-apt-get install python3 python3.1 -y --force-yes
 
 Download latest release (`.deb` file) from [Releases](https://github.com/WunderWungiel/MeeShop/releases) page, and transfer it to N9, saving in **MyDocs** (i.e. **Nokia N9** drive when connected to PC).
 Run the **Terminal** again, and type following commands:
