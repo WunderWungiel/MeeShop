@@ -2,8 +2,10 @@ import time
 from urllib.request import urlopen
 import subprocess
 import re
+import sys
+sys.path.append("functions")
 
-from .clean import clean
+from clean import clean
 
 blue = '\033[96m'
 red = '\033[31m'

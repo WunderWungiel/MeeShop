@@ -1,4 +1,6 @@
-from .clean import clean
+import sys
+sys.path.append("functions")
+from clean import clean
 
 blue = '\033[96m'
 red = '\033[31m'
