@@ -7,9 +7,7 @@ import dbc
 
 db_creator = dbc.Db_creator()
 ovi_db = db_creator.ovi_db
-db = db_creator.db
-full_db = db_creator.full_db
-libs_db = db_creator.libs_db
+categories = db_creator.categories
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -68,14 +66,59 @@ def second_menu():
                 continue
             else:
                 query = re_decoder(query)
-                app_functions.search(query=query)
+                app_functions.search(query=query, category="full")
                 clean()
 
         elif option == "2":
-            app_functions.show_apps()
-            input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
-            clean()
-            continue
+
+            while True:
+                clean()
+                print(" ┌──────────────────────────────────────┐")
+                print(" │                                      │")
+                print(" │           ╔══════════════╗           │")
+                print(" │           ║  Categories: ║           │")
+                print(" │           ╚══════════════╝           │")
+                print(" │                                      │")
+
+                dbs = {}
+
+                for i, category in enumerate(categories.keys(), start=1):
+                    dbs[str(i)] = category
+
+                    name = categories[category]["name"]
+
+                    text = "           {}. {}".format(str(i), name)
+                    lenght = " " * int((38 - len(text)))
+                    text = text = "           {}. {}{}".format(str(i), name, lenght)
+                    print(" │{}│".format(text))
+
+
+                print(" │                                      │")
+                print(" │           0. Return                  │")
+                print(" │                                      │")
+                print(" └──────────────────────────────────────┘ \n")
+
+ 
+
+                _break = None
+
+                while True:
+                    answer = input(" {}Select category or return:{} ".format(cyan, reset))
+
+                    if answer == "0":
+                        _break = True
+                        break
+
+                    if not answer.isnumeric() or answer not in dbs.keys():
+                        continue
+
+                    _ = app_functions.show_apps(dbs[answer])
+                    if _ == "Break":
+                        break
+
+                if _break:
+                    _break = None
+                    break
 
         elif option == "0":
             return "Break"

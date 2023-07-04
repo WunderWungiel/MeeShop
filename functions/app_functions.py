@@ -7,12 +7,11 @@ sys.path.append("functions")
 from clean import clean
 import apt
 import dbc
+from re_decoder import re_decoder
 
 db_creator = dbc.Db_creator()
 ovi_db = db_creator.ovi_db
-db = db_creator.db
-full_db = db_creator.full_db
-libs_db = db_creator.libs_db
+categories = db_creator.categories
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -21,11 +20,30 @@ green = '\033[32m'
 blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
+
+def ask_for_search(category):
+    clean()
+    print(" ┌──────────────────────────────────────┐")
+    print(" │                                      │")
+    print(" │             ╔══════════╗             │")
+    print(" │             ║  Search: ║             │")
+    print(" │             ╚══════════╝             │")
+    print(" │                                      │")
+    print(" └──────────────────────────────────────┘ \n")
+    query = input(" {}Query to search:{} ".format(yellow, reset))
+    if not query:
+        return "Break"
+    if query == "0":
+        return "Break"
+    else:
+        query = re_decoder(query)
+        search(query=query, category=category)
+
+def app(package):
     
-def app(package, _clean=True):
-    
-    if _clean:
-        clean()
+    db = categories["full"]["db"]
+
+    clean()
 
     print(" ┌──────────────────────────────────────┐")
     print(" │                                      │")
@@ -60,8 +78,6 @@ def app(package, _clean=True):
     print(" │  Maintainer: {}{}│".format(developer, lenght))
     print(" │                                      │")
     
-    file = db[package]['file']
-
     link = "MeeGo/openrepos/" + db[package]['file']
     link = quote(link)
     link = "http://wunderwungiel.pl/" + link
@@ -112,7 +128,7 @@ def app(package, _clean=True):
     elif action == "install":
 
         apt.download(package, prompt=False)
-        apt.install(display_name, file)
+        apt.install(package)
 
     elif action == "download":
 
@@ -157,7 +173,7 @@ def ovi_app(file, link):
     if category == "1":
         
         apt.ovi_download(file="{}_armel.deb".format(file), link=link, prompt=False)
-        apt.install(display_name="{}_armel.deb".format(file), filename="{}_armel.deb".format(file))
+        apt.ovi_install(display_name="{}_armel.deb".format(file), filename="{}_armel.deb".format(file))
 
     elif category == "2":
 
@@ -201,6 +217,7 @@ def ovi_search(query):
         print(" │         ╚══════════════════╝         │")
         print(" │                                      │")
         for i, pkg in zip(numbers, results):
+            pkg = re.sub("\_\d+.+", "", pkg)
             _result = "{}. {}".format(i, pkg)
             lenght = " " * int((38 - 2 - len(_result)))
             print(" │  {}{}│".format(_result, lenght))
@@ -237,15 +254,15 @@ def ovi_search(query):
                 break
         clean()
 
-def search(query):
+def search(query, category="full"):
 
-    print()
+    our_db = categories[category]["db"]
 
     numbers = []
     results = []
     packages = {}
 
-    for pkg, dict in db.items():
+    for pkg, dict in our_db.items():
         if re.search("(?i){}".format(query), dict['display_name']):
             results.append(re.search("(.+)", dict['display_name']).group(0))
     for i, result in enumerate(results, start=1):
@@ -255,13 +272,9 @@ def search(query):
         print(" {}No apps found!{}".format(red, reset))
         input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
         return "Break"
-    clean()
-
-    print()
-
 
     for result in results:
-        for key, value in db.items():
+        for key, value in our_db.items():
             if value['display_name'] == result:
                 packages[value['display_name']] = key
     
@@ -316,15 +329,9 @@ def search(query):
                 break
         clean()
 
-def show_apps(category="apps"):
+def show_apps(category="full"):
 
-    dbs = {
-        "apps": db,
-        "full": full_db,
-        "libs": libs_db
-    }
-
-    our_db = dbs[category]
+    our_db = categories[category]["db"]
 
     numbers = []
     db_list = []
@@ -340,13 +347,65 @@ def show_apps(category="apps"):
     print(" │         ║  List of packages: ║       │")
     print(" │         ╚════════════════════╝       │")
     print(" │                                      │")
+    print(" │ (Se)arch                             │")
     
     rang_first = 0
     rang_last = 10
 
+    proceeded = 0
+
     _break = None
 
     while True:
+
+        left = (len(db_list) - proceeded)
+        if left < 10:
+            for i in range(-1, -left-1, -1):
+                pkg = db_list[i]
+                number = numbers[i]
+                pkg_name = our_db[pkg]['display_name']
+                text = " {}. {}".format(number, pkg_name)
+                if len(text) % 2 != 0:
+                    text += " "
+                length = " " * int(38 - len(text))
+                print(" │{}{}│".format(text, length))
+            
+            while True:
+                answer = input(" {}\nInsert umber to show app,\n 0 to exit:{} ".format(cyan, reset))
+                print()
+
+                if answer == "0":
+                    _break = True
+                    break
+                elif answer.lower() == "se":
+                    _ = ask_for_search(category)
+                    answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+                    if answer.lower() == "y":
+                        return "Break"
+                    else:
+                        pass
+                else:
+                    if not answer.isnumeric():
+                        print(" {}Answer should be number or Enter{}".format(red, reset))
+                        continue
+                    if answer not in numbers:
+                        print(" Wrong number".format(red, reset))
+                        continue
+
+                    while True:
+                        _ = app(db_list[numbers.index(answer)])
+                        if _ == "Break":
+
+                            answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+                            if answer.lower() == "y":
+                                return "Break"
+                            else:
+                                break
+
+        if _break:
+            _break = None
+            break
+
         for i in range(rang_first, rang_last):
             pkg = db_list[i]
             number = numbers[i]
@@ -358,45 +417,74 @@ def show_apps(category="apps"):
             print(" │{}{}│".format(text, length))
         rang_first += 10
         rang_last += 10
+        proceeded += 10
 
         while True:
-            answer = input(" \nEnter to more, number to show app,\n N to exit: ")
+            answer = input(" {}\nEnter to more, number to show app,\n 0 to exit:{} ".format(cyan, reset))
             print()
 
             if answer == "":
                 break
-            elif answer.lower() in ["n", "no"]:
-                _break = True
-                break
+            elif answer == "0":
+                return "Break"
+            
+            elif answer.lower() == "se":
+                _ = ask_for_search(category)
+                answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+                if answer.lower() == "y":
+                    return "Break"
+                else:
+                    pass
+
             else:
                 if not answer.isnumeric():
-                    print("Answer should be number or Enter")
+                    print(" {}Answer should be number or Enter{}".format(red, reset))
                     continue
                 if answer not in numbers:
-                    print("Wrong number")
+                    print(" {}Wrong number{}".format(red,reset))
                     continue
 
                 while True:
-                    _ = app(db_list[numbers.index(answer)], _clean=None)
+                    _ = app(db_list[numbers.index(answer)])
                     if _ == "Break":
-                        break
+                        answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+                        if answer.lower() == "y":
+                            return "Break"
+                        else:
+                            break
         if _break:
             _break = None
             break
 
-    while True:
-        answer = input(" Type number or Enter to return: ")
+    print(" {}Type number, 0 to return:{}\n".format(cyan, reset))
 
-        if answer != "":
+    while True:
+        answer = input()
+
+        if answer == "0":
+            return "Break"
+
+        elif answer.lower() == "se":
+            _ = ask_for_search(category)
+            answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+            if answer.lower() == "y":
+                return "Break"
+            else:
+                pass
+
+        else:
             if not answer.isnumeric():
-                print("Answer should be number")
+                print(" {}Answer should be number{}".format(red, reset))
                 continue
             if answer not in numbers:
-                print("Wrong number")
+                print(" {}Wrong number{}".format(red, reset))
                 continue
 
             while True:
                 _ = app(db_list[numbers.index(answer)])
-                if _ == "Break":
+                answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+                if answer.lower() == "y":
+                    return "Break"
+                else:
                     break
 

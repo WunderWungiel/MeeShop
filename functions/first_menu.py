@@ -7,13 +7,6 @@ from rss import rss
 from about import about
 from re_decoder import re_decoder
 import app_functions
-import dbc
-
-db_creator = dbc.Db_creator()
-ovi_db = db_creator.ovi_db
-db = db_creator.db
-full_db = db_creator.full_db
-libs_db = db_creator.libs_db
 
 blue = '\033[96m'
 red = '\033[31m'

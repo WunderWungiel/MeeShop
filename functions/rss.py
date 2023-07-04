@@ -1,7 +1,8 @@
 import time
 from urllib.request import urlopen
+from urllib.error import URLError, HTTPError
 import subprocess
-import re
+from xml.etree import ElementTree as ET
 import sys
 sys.path.append("functions")
 
@@ -19,13 +20,29 @@ def rss():
 
     countries_numbers = []
     countries_names = []
+    countries_files = []
 
-    with urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/countries.txt") as r:
-        r = r.read().decode("utf-8").splitlines()
-        for i, line in enumerate(r, start=1):
-            countries_numbers.append(str(i))
-            countries_names.append(line)
+    try:
+        r = urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/countries.xml")
+    except (URLError, HTTPError):
+        print(" {}Error while downloading content!{}".format(red, reset))
+        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+        return
+    with open("countries.xml", "w") as f:
+        f.write(r.read().decode("utf-8"))
+
+    tree = ET.parse('countries.xml')
+    root = tree.getroot()
+
+    for i, country in enumerate(root.findall('country'), start=1):
+        country_name = country.get('name')
+        country_file = country.get('file')
+
+        countries_numbers.append(str(i))
+        countries_names.append(country_name)
+        countries_files.append(country_file)
     
+
     while True:
         clean()
         print(" ┌──────────────────────────────────────┐")
@@ -43,42 +60,62 @@ def rss():
         print(" │                                      │")
         print(" └──────────────────────────────────────┘ \n")
         
-        country = input(" {}Select a country (digit):{} ".format(yellow, reset))
-        if country == "0":
+        answer = input(" {}Select a country (digit):{} ".format(yellow, reset))
+        if answer == "0":
             clean()
             return
-        if country not in countries_numbers:
+        if answer not in countries_numbers:
             print(" {}Wrong number, select a correct one!{}".format(red, reset))
             time.sleep(2)
             continue
         else:
             pass
 
+        country = countries_names[countries_numbers.index(answer)]
+        country_file = countries_files[countries_numbers.index(answer)]
+
         while True:
-            _ = country_feeds(country=country, countries_names=countries_names, countries_numbers=countries_numbers)
+            _ = country_feeds(country, country_file)
             if _ == "Break":
                 break
 
-def country_feeds(country, countries_names, countries_numbers):
+def country_feeds(country, country_file):
 
     while True:
 
-        country_name = countries_names[countries_numbers.index(country)]
+        try:
+            r = urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/{}".format(country_file))
+        except (URLError, HTTPError):
+            print(" {}Error while downloading content!{}".format(red, reset))
+            input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+            return "Break"
+        with open(country_file, "w") as f:
+            f.write(r.read().decode("utf-8"))
 
-        with urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/{}.txt".format(country_name.lower())) as r:
-            r = r.read().decode("utf-8")
-            numbers = re.findall("(\d{1,2}) \|", r)
-            names = re.findall("\| (.+) \|", r)
-            links = re.findall("\| (http.+)", r)
+        tree = ET.parse(country_file)
+        root = tree.getroot()
+
+        numbers = []
+        names = []
+        links = []
+
+        for rss in root.findall('rss'):
+            number = rss.get('num')
+            name = rss.get('name')
+            url = rss.get('url')
+
+            numbers.append(number)
+            names.append(name)
+            links.append(url)
 
         clean()
-        if len(country_name) % 2 != 0:
-            country_name = " " + country_name
-        lenght = " " * int((38 - 7 - len(country_name)) / 2)
+        if len(country) % 2 != 0:
+            country = " " + country
+        lenght = " " * int((38 - 7 - len(country)) / 2)
 
         print(" ┌──────────────────────────────────────┐")
         print(" │                                      │")
-        print(" │{}{} feeds:{}│".format(lenght, country_name, lenght))
+        print(" │{}{} feeds:{}│".format(lenght, country, lenght))
         print(" │                                      │")
         for i, name in zip(numbers, names):
             feed = "{}. {}".format(i, name)

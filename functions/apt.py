@@ -11,9 +11,8 @@ import dbc
 
 db_creator = dbc.Db_creator()
 ovi_db = db_creator.ovi_db
-db = db_creator.db
-full_db = db_creator.full_db
-libs_db = db_creator.libs_db
+categories = db_creator.categories
+full_db = categories["full"]["db"]
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -121,8 +120,8 @@ def is_installed(package):
 
 def install(package):
 
-    display_name = db[package]['display_name']
-    filename = db[package]['file']
+    display_name = full_db[package]['display_name']
+    filename = full_db[package]['file']
 
     print(" Installing...")
     print(" ")

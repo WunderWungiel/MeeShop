@@ -1,10 +1,8 @@
 #!/usr/bin/python3.1
 
 import os
-from urllib.request import urlopen
 import sys
-from urllib.error import HTTPError, URLError
-
+import subprocess
 from functions.clean import clean
 from functions.first_menu import first_menu
 import functions.dbc as dbc
@@ -32,9 +30,8 @@ def main():
     
     os.chdir(folder)
 
-    try:
-        urlopen("http://wunderwungiel.pl")
-    except (HTTPError, URLError):
+    _ = subprocess.call("ping wunderwungiel.pl -c 2 > /dev/null 2>&1", shell=True)
+    if _ != 0:
         print(" {}Failed to connect, please\n check your internet connection.{}".format(red, reset))
         print()
         input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
