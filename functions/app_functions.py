@@ -379,11 +379,11 @@ def show_apps(category="full"):
                     break
                 elif answer.lower() == "se":
                     _ = ask_for_search(category)
-                    answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+                    answer = input(" {}Return to menu (y / Enter)?{} ".format(cyan, reset))
                     if answer.lower() == "y":
                         return "Break"
                     else:
-                        pass
+                        break
                 else:
                     if not answer.isnumeric():
                         print(" {}Answer should be number or Enter{}".format(red, reset))
@@ -396,7 +396,7 @@ def show_apps(category="full"):
                         _ = app(db_list[numbers.index(answer)])
                         if _ == "Break":
 
-                            answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+                            answer = input(" {}Return to menu (y / Enter)?{} ".format(cyan, reset))
                             if answer.lower() == "y":
                                 return "Break"
                             else:
@@ -430,11 +430,11 @@ def show_apps(category="full"):
             
             elif answer.lower() == "se":
                 _ = ask_for_search(category)
-                answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+                answer = input(" {}Return to menu (y / Enter)?{} ".format(cyan, reset))
                 if answer.lower() == "y":
                     return "Break"
                 else:
-                    pass
+                    break
 
             else:
                 if not answer.isnumeric():
@@ -447,7 +447,7 @@ def show_apps(category="full"):
                 while True:
                     _ = app(db_list[numbers.index(answer)])
                     if _ == "Break":
-                        answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+                        answer = input(" {}Return to menu (y / Enter)?{} ".format(cyan, reset))
                         if answer.lower() == "y":
                             return "Break"
                         else:
@@ -466,7 +466,7 @@ def show_apps(category="full"):
 
         elif answer.lower() == "se":
             _ = ask_for_search(category)
-            answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+            answer = input(" {}Return to menu (y / Enter)?{} ".format(cyan, reset))
             if answer.lower() == "y":
                 return "Break"
             else:
@@ -482,7 +482,7 @@ def show_apps(category="full"):
 
             while True:
                 _ = app(db_list[numbers.index(answer)])
-                answer = input(" {}Return to menu (y / n)?{} ".format(cyan, reset))
+                answer = input(" {}Return to menu (y / Enter)?{} ".format(cyan, reset))
                 if answer.lower() == "y":
                     return "Break"
                 else:

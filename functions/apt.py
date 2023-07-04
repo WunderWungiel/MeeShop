@@ -133,32 +133,11 @@ def install(package):
     except subprocess.CalledProcessError as e:
         result = e.output
         result = result.decode("utf-8")
-        depends = re.findall("depends on (.+);", result)
-        if depends:
-            depends = ', '.join(depends)
-            print(" Package {} depends on following\n dependencies, not installed yet:\n\n {}.".format(display_name, depends))
-
-            apt_depends = None
-
-            for depend in depends:
-                if not depend_install_meeshop:
-                    apt_depends = True
-                    continue
-                install_depend(depend)
-
-            if apt_depends:
-
-                print(" Following dependencies were not found in MeeShop:")
-                print(", ".join(apt_depends))
-                print("Trying APT Fixer...")
-
-                time.sleep(1)
-
-                fix()
-
-            print(" Completed! Check if everything works.")
-
-        else:
+        depends = re.findall("depends on (.+)\s\(.+\);", result)
+        if not depends:
+            depends = re.findall("depends on (.+);", result)
+        
+        if not depends:
             print(" Some error occured... Output:")
             print()
             print(" ########################################")
@@ -172,7 +151,35 @@ def install(package):
 
             return
 
-    print(" ")
+        depends_string = ', '.join(depends)
+        print(" Package {} depends on following\n dependencies, not installed yet:\n\n {}".format(display_name, depends_string))
+        print()
+        apt_depends = []
+        apt_depends_status = None
+
+        for depend in depends:
+            if not depend_install_meeshop:
+                apt_depends_status = True
+                apt_depends.append(depend)
+                continue
+            install_depend(depend)
+
+        if apt_depends_status:
+            print(" Following dependencies were not found in MeeShop:")
+            print(", ".join(apt_depends))
+            print("Trying APT Fixer...")
+
+            time.sleep(1)
+
+            fix()
+
+        print()
+        
+        fix()
+
+        print(" Completed! Check if everything works.")
+
+    print()
     print(" {}{} installed!{}".format(green, display_name, reset))
     input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
 
@@ -188,32 +195,11 @@ def ovi_install(display_name, filename):
     except subprocess.CalledProcessError as e:
         result = e.output
         result = result.decode("utf-8")
-        depends = re.findall("depends on (.+);", result)
-        if depends:
-            depends = ', '.join(depends)
-            print(" Package {} depends on following\n dependencies, not installed yet:\n\n {}.".format(display_name, depends))
-
-            apt_depends = None
-
-            for depend in depends:
-                if not depend_install_meeshop:
-                    apt_depends = True
-                    continue
-                install_depend(depend)
-
-            if apt_depends:
-
-                print(" Following dependencies were not found in MeeShop:")
-                print(", ".join(apt_depends))
-                print("Trying APT Fixer...")
-
-                time.sleep(1)
-
-                fix()
-
-            print(" Completed! Check if everything works.")
-
-        else:
+        depends = re.findall("depends on (.+)\s\(.+\);", result)
+        if not depends:
+            depends = re.findall("depends on (.+);", result)
+        
+        if not depends:
             print(" Some error occured... Output:")
             print()
             print(" ########################################")
@@ -227,7 +213,36 @@ def ovi_install(display_name, filename):
 
             return
 
-    print(" ")
+        depends_string = ', '.join(depends)
+        print(" Package {} depends on following\n dependencies, not installed yet:\n\n {}.".format(display_name, depends_string))
+        print()
+
+        apt_depends = []
+        apt_depends_status = None
+
+        for depend in depends:
+            if not depend_install_meeshop:
+                apt_depends_status = True
+                apt_depends.append(depend)
+                continue
+            install_depend(depend)
+
+        if apt_depends_status:
+            print(" Following dependencies were not found in MeeShop:")
+            print(", ".join(apt_depends))
+            print("Trying APT Fixer...")
+
+            time.sleep(1)
+
+            fix()
+
+        print()
+
+        fix()
+
+        print(" Completed! Check if everything works.")
+
+    print()
     print(" {}{} installed!{}".format(green, display_name, reset))
     input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
 
@@ -247,18 +262,9 @@ def fix():
     input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
 
 def install_depend(package):
-    display_name = full_db[package]['display_name'] 
-    filename = full_db[package]['file']
 
-    download(package, prompt=True)
+    download(package, prompt=False)
     install(package)
-
-"""def depend_install_apt(package):
-    result = subprocess.call("aegis-apt-get install -y {} > /dev/null 2>&1".format(package), shell=True)
-    if result == 100:
-        return False
-    else:
-        return True"""
     
 def depend_install_meeshop(package):
     if package in full_db.keys():

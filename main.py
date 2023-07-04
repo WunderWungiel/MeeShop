@@ -21,8 +21,8 @@ def main():
 
     clean()
 
-    folder = "."
-    #folder = "/opt/MeeShop/.cache"
+    #folder = "."
+    folder = "/opt/MeeShop/.cache"
     if not os.path.isdir(folder):
         if os.path.isfile(folder):
             os.remove(folder)
