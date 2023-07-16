@@ -1,16 +1,11 @@
 #!/usr/bin/python3.1
 
 import os
-from urllib.request import urlopen
 import sys
 import subprocess
-from xml.etree import ElementTree as ET
-
-from functions.clean import clean
-from functions.category import category
-import functions.category
-import functions.search
-import functions.options
+sys.path.append("/opt/MeeShop/functions")
+import dbc
+from clean import clean
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -20,76 +15,113 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
+def press_enter_to_exit():
+    input(" {}{}Press Enter to exit... {}".format(blink, cyan, reset))
+    sys.exit(1)
+
 def main():
 
     clean()
 
-    #folder = "."
-    folder = "/opt/MeeShop/.cache"
-    if not os.path.isdir(folder):
-        if os.path.isfile(folder):
-            os.remove(folder)
-        os.mkdir(folder)
-    
-    os.chdir(folder)
+    print(" Setting up workspace...\n")
 
-    _ = subprocess.call("ping wunderwungiel.pl -c 2 > /dev/null 2>&1", shell=True)
+    try:
+        #folder = "."
+        folder = "/opt/MeeShop/.cache"
+        if not os.path.isdir(folder):
+            if os.path.isfile(folder):
+                os.remove(folder)
+            os.mkdir(folder)
+    
+        os.chdir(folder)
+
+    except:
+        print(" {}Error while setting workspace...\n{}".format(red, reset))
+        press_enter_to_exit()
+    else:
+        print(" {}Done!\n{}".format(green, reset))
+
+    print(" Testing internet connection...\n")
+    _ = subprocess.call("ping wunderwungiel.pl -c 1 > /dev/null 2>&1", shell=True)
     if _ != 0:
-        print(" {}Failed to connect, please\n check your internet connection.{}".format(red, reset))
-        print()
-        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
-        clean()
-        sys.exit(1)
+        print(" {}Failed to connect, check your internet connection.\n{}".format(red, reset))
+        press_enter_to_exit()
+    else:
+        print(" {}Done!\n{}".format(green, reset))
+    
+    print(" Building databases...\n")
+
+    db_creator = dbc.Db_creator()
+
+    if db_creator.error:
+        print(" {}Failed building databases...\n{}".format(red, reset))
+        press_enter_to_exit()
+    else:
+        print(" {}Done!\n{}".format(green, reset))
 
     for f in os.listdir("."):
         if f.endswith(".deb"):
             os.remove(f)
 
-    if not os.path.exists("/usr/bin/aegis-apt-get"):
+    print(" Checking for Aegis-hack...\n")
+
+    if not os.path.isfile("/usr/bin/aegis-apt-get"):
         print(" {}Aegis-install hack by CODeRUS needs to be installed.{}".format(red, reset))
         print(" Get it here:")
         print(" http://wunderwungiel.pl/MeeGo/apt-repo/pool/main/hack-installer_1.0.10_armel.deb")
         print(" ")
-        sys.exit(1)
+        press_enter_to_exit()
 
-    r = urlopen("http://wunderwungiel.pl/MeeGo/openrepos/catalog.xml")
-    with open("catalog.xml", "w") as f:
-        f.write(r.read().decode("utf-8"))
+    else:
+        print(" {}Done!\n{}".format(green, reset))
 
-    r= urlopen("http://wunderwungiel.pl/MeeGo/.database/Ovi.txt")
-    with open("Ovi.txt", "w") as f:
-        f.write(r.read().decode("utf-8"))
-    with open("Ovi.txt", "r") as f:
-        ovi_db = f.readlines()
+    print(" Importing necessary modules...\n")
 
-    tree = ET.parse('catalog.xml')
-    root = tree.getroot()
+    try:
+        from first_menu import first_menu
+        import apt
+    except ImportError:
+        print(" {}Failed importing necessary modules...\n{}".format(red, reset))
+        press_enter_to_exit()
+    else:
+        print(" {}Done!\n{}".format(green, reset))
 
-    db = {}
+    print(" Testing dpkg lock state...\n")
 
-    for app in root.findall('app'):
-        package = app.find('data').get('package')
-        display_name = app.find('data').get('name')
-        developer = app.find('data').get('dev')
-        version = app.find('data').get('ver')
-        file = app.find('data').get('deb')
-        size = app.find('data').get('size')
-    
-        db[package] = {
-            'file': file,
-            'version': version,
-            'developer': developer,
-            'package': package,
-            'display_name': display_name,
-            'size': size
-        }
+    result = apt.is_dpkg_locked()
+    if result:
+        print(" {}dpkg / apt-get is busy and locked...{}".format(red, reset))
+        print(" Close all dpkg / apt-get processes")
+        print(" and try again. You can also reboot phone.\n")
+        press_enter_to_exit()
+    else:
+        print(" {}Done!\n{}".format(green, reset))
 
-    functions.category.init(db)
-    functions.search.init(_ovi_db=ovi_db)
-    functions.options.init()
+
+    if not apt.is_repo_enabled():
+
+        print(" Adding MeeShop repository...\n")
+
+        result = apt.add_repo()
+
+        if result == "Error":
+            print(" {}Failed adding repository...\n{}".format(red, reset))
+            press_enter_to_exit()
+        else:
+            print(" {}Done!\n{}".format(green, reset))
+
+        print(" Updating repositories...\n")
+        
+        result = apt.update()
+
+        if result == "Error":
+            print(" {}Error updating repositories...{}".format(red, reset))
+            press_enter_to_exit()
+        else:
+            print(" {}Done!\n{}".format(green, reset))
 
     while True:
-        category()
+        first_menu()
         clean()
 
 if __name__ == "__main__":

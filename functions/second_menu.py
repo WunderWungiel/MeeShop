@@ -1,6 +1,13 @@
-from .clean import clean
-from .search import Search
-from .re_decoder import re_decoder
+import sys
+sys.path.append("/opt/MeeShop/functions")
+from clean import clean
+import app_functions
+from re_decoder import re_decoder
+import dbc
+
+db_creator = dbc.Db_creator()
+ovi_db = db_creator.ovi_db
+categories = db_creator.categories
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -10,11 +17,7 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
-def init():
-    global search
-    search = Search()
-
-def options(db):
+def second_menu():
 
     while True:
         while True:
@@ -28,7 +31,7 @@ def options(db):
             print(" │          Select an option:           │")
             print(" │                                      │")
             print(" │             1. Search                │")
-            print(" │             2. Show apps             │")
+            print(" │             2. Categories            │")
             print(" │                                      │")
             print(" │             0. Return                │")
             print(" │                                      │")
@@ -63,29 +66,59 @@ def options(db):
                 continue
             else:
                 query = re_decoder(query)
-                search.search(db=db, query=query)
+                app_functions.search(query=query, category="full")
                 clean()
 
         elif option == "2":
-            clean()
-            print(" ┌──────────────────────────────────────┐")
-            print(" │                                      │")
-            print(" │         ╔════════════════════╗       │")
-            print(" │         ║  List of packages: ║       │")
-            print(" │         ╚════════════════════╝       │")
-            print(" │                                      │")
-            for pkg in db.keys():
-                pkg = db[pkg]['display_name']
-                if len(pkg) % 2 != 0:
-                    pkg = pkg + " "
-                lenght = " " * int((38 - len(pkg)) / 2)
-                print(" │{}{}{}│".format(lenght, pkg, lenght))
-            
-            print(" │                                      │")
-            print(" └──────────────────────────────────────┘ \n")
-            input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
-            clean()
-            continue
+
+            while True:
+                clean()
+                print(" ┌──────────────────────────────────────┐")
+                print(" │                                      │")
+                print(" │           ╔══════════════╗           │")
+                print(" │           ║  Categories: ║           │")
+                print(" │           ╚══════════════╝           │")
+                print(" │                                      │")
+
+                dbs = {}
+
+                for i, category in enumerate(categories.keys(), start=1):
+                    dbs[str(i)] = category
+
+                    name = categories[category]["name"]
+
+                    text = "           {}. {}".format(str(i), name)
+                    lenght = " " * int((38 - len(text)))
+                    text = text = "           {}. {}{}".format(str(i), name, lenght)
+                    print(" │{}│".format(text))
+
+
+                print(" │                                      │")
+                print(" │           0. Return                  │")
+                print(" │                                      │")
+                print(" └──────────────────────────────────────┘ \n")
+
+ 
+
+                _break = None
+
+                while True:
+                    answer = input(" {}Select category or return:{} ".format(cyan, reset))
+
+                    if answer == "0":
+                        _break = True
+                        break
+
+                    if not answer.isnumeric() or answer not in dbs.keys():
+                        continue
+
+                    _ = app_functions.show_apps(dbs[answer])
+                    if _ == "Break":
+                        break
+
+                if _break:
+                    _break = None
+                    break
 
         elif option == "0":
             return "Break"
