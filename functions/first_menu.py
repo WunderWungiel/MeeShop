@@ -95,6 +95,9 @@ def first_menu():
         return
     
     elif category == "5":
+
+        print(" Updating repositories...\n")
+        
         result = apt.update()
 
         if result == "Error":

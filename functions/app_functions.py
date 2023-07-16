@@ -421,6 +421,7 @@ def show_apps(category="full"):
             pkg = db_list[i]
             number = numbers[i]
             pkg_name = our_db[pkg]['display_name']
+            
             text = " {}. {}".format(number, pkg_name)
             if len(text) % 2 != 0:
                 text += " "

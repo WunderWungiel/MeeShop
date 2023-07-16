@@ -5,7 +5,7 @@
 
  - [x] OpenRepos
  - [x] Ovi Store
- - [ ] Automatic dependencies resolving
+ - [x] Automatic dependencies resolving
 
 
 ## Installing
@@ -24,7 +24,7 @@ Run the **Terminal** again, and type following commands:
     (enter "rootme" without quotes as password)
     cd /home/user/MyDocs
     aegis-dpkg -i meeshop_RELEASE_armel.deb
-    (replace RELEASE with the proper number, i.e. 0.1.0)
+    (replace RELEASE with the proper number, i.e. 0.2.0)
 If you don't see any errors, you're ready to use MeeShop!
 
 ## How to use
@@ -47,7 +47,7 @@ To **go back** (almost) anytime, press **0** when MeeShop asks you for something
 
 ## Credits
 
- - [IarChep / Ярослав](https://t.me/iaroslavchep) - icon, Russian translation and inexhaustible help and ingenuity!
+ - [IarChep / Ярослав](https://t.me/iaroslavchep) - icon, splash, inexhaustible help and ingenuity!
  - [Python](https://python.org) for making an easy to learn, power programming language
  - [tqdm](https://github.com/tqdm/tqdm) developers for CLI progress bar
- - [Linux Mobile World](https://t.me/linuxmobile_world) community for testing this app
+ - [Linux Mobile World](https://t.me/linuxmobile_world) community for testing this app and being nice community :)
