@@ -1,5 +1,5 @@
 import sys
-sys.path.append("functions")
+sys.path.append("/opt/MeeShop/functions")
 from clean import clean
 import app_functions
 from re_decoder import re_decoder
@@ -31,7 +31,7 @@ def second_menu():
             print(" │          Select an option:           │")
             print(" │                                      │")
             print(" │             1. Search                │")
-            print(" │             2. Show apps             │")
+            print(" │             2. Categories            │")
             print(" │                                      │")
             print(" │             0. Return                │")
             print(" │                                      │")

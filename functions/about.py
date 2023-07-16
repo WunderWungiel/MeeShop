@@ -1,5 +1,5 @@
 import sys
-sys.path.append("functions")
+sys.path.append("/opt/MeeShop/functions")
 from clean import clean
 
 blue = '\033[96m'

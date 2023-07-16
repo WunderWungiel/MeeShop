@@ -3,7 +3,7 @@ from urllib.parse import quote
 import subprocess
 import time
 import sys
-sys.path.append("functions")
+sys.path.append("/opt/MeeShop/functions")
 from clean import clean
 import apt
 import dbc
@@ -84,11 +84,13 @@ def app(package):
 
     if apt.is_installed(package):
         print(" │      1. Uninstall                    │")
-        print(" │      2. Open with browser            │")
+        print(" │      2. Download                     │")
+        print(" │      3. Open with browser            │")
 
         functions = {
             '1': 'uninstall',
-            '2': 'open_browser',
+            '2': 'download',
+            '3': 'open_browser',
             '0': 'return'
         }
 
@@ -127,12 +129,16 @@ def app(package):
 
     elif action == "install":
 
-        apt.download(package, prompt=False)
-        apt.install(package)
+        try:
+            apt.install(package)
+        except Exception as e:
+            print(" Error {}{}{}! Report to developer.".format(red, e, reset))
+            input(" {}{}Press Enter to exit... {}".format(blink, cyan, reset))
+            sys.exit(1)
 
     elif action == "download":
 
-        apt.download(package, prompt=True, mydocs=True)
+        apt.download(package)
         input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
 
     elif action == "open_browser":
@@ -173,13 +179,18 @@ def ovi_app(file, link):
     if category == "1":
         
         apt.ovi_download(file="{}_armel.deb".format(file), link=link, prompt=False)
-        apt.ovi_install(display_name="{}_armel.deb".format(file), filename="{}_armel.deb".format(file))
+        try:
+            apt.ovi_install(display_name="{}_armel.deb".format(file), filename="{}_armel.deb".format(file))
+        except Exception as e:
+            print(" Error {}{}{}! Report to developer.".format(red, e, reset))
+            input(" {}{}Press Enter to exit... {}".format(blink, cyan, reset))
+            sys.exit(1)
 
     elif category == "2":
 
         apt.ovi_download(file="{}_armel.deb".format(file), link=link, prompt=True, mydocs=True)
         input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
-    elif category == 0:
+    elif category == "0":
         return "Break"
 
 def ovi_search(query):

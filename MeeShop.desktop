@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=MeeShop
+Categories=System; 
+Exec=/usr/bin/invoker --splash=/opt/MeeShop/splash.png --type=e /usr/bin/meego-terminal -n -e /usr/bin/aegis-exec -s -u user -l "/opt/MeeShop/main.py"
+Icon=/usr/share/icons/hicolor/80x80/apps/MeeShop80.png

@@ -1,5 +1,5 @@
 import sys
-sys.path.append("functions")
+sys.path.append("/opt/MeeShop/functions")
 from clean import clean
 from second_menu import second_menu
 import apt
@@ -33,14 +33,15 @@ def first_menu():
         print(" │                                      │")
         print(" │         3. RSS Feeds                 │")
         print(" │         4. APT fixer                 │")
+        print(" │         5. Update repository         │")
         print(" │                                      │")
-        print(" │         5. Check for updates         │")
-        print(" │         6. About                     │")
+        print(" │         6. Check for updates         │")
+        print(" │         7. About                     │")
         print(" │                                      │")
         print(" │         0. Exit                      │")
         print(" │                                      │")
         print(" └──────────────────────────────────────┘ \n")
-        supported = range(0, 7)
+        supported = range(0, 8)
         category = input(" ")
         print()
         if not category:
@@ -94,11 +95,24 @@ def first_menu():
         return
     
     elif category == "5":
-        apt.meeshop_update()
+        result = apt.update()
+
+        if result == "Error":
+            print(" {}Error updating repositories...{}".format(red, reset))
+            print(" Try to do it manually.")
+        else:
+            print(" {}Done!\n{}".format(green, reset))
+
+        input(" {}{}Press Enter to return... {}".format(blink, cyan, reset))
         clean()
         return
 
     elif category == "6":
+        apt.meeshop_update()
+        clean()
+        return
+
+    elif category == "7":
         about()
         clean()
         return

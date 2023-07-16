@@ -4,7 +4,7 @@ from urllib.error import URLError, HTTPError
 import subprocess
 from xml.etree import ElementTree as ET
 import sys
-sys.path.append("functions")
+sys.path.append("/opt/MeeShop/functions")
 
 from clean import clean
 
@@ -28,11 +28,9 @@ def rss():
         print(" {}Error while downloading content!{}".format(red, reset))
         input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
         return
-    with open("countries.xml", "w") as f:
-        f.write(r.read().decode("utf-8"))
+    root_string = r.read().decode("utf-8")
 
-    tree = ET.parse('countries.xml')
-    root = tree.getroot()
+    root = ET.fromstring(root_string)
 
     for i, country in enumerate(root.findall('country'), start=1):
         country_name = country.get('name')
@@ -81,19 +79,17 @@ def rss():
 
 def country_feeds(country, country_file):
 
+    try:
+        r = urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/{}".format(country_file))
+    except (URLError, HTTPError):
+        print(" {}Error while downloading content!{}".format(red, reset))
+        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+        return "Break"
+    
+    root_string = r.read().decode("utf-8")
+    root = ET.fromstring(root_string)
+
     while True:
-
-        try:
-            r = urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/{}".format(country_file))
-        except (URLError, HTTPError):
-            print(" {}Error while downloading content!{}".format(red, reset))
-            input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
-            return "Break"
-        with open(country_file, "w") as f:
-            f.write(r.read().decode("utf-8"))
-
-        tree = ET.parse(country_file)
-        root = tree.getroot()
 
         numbers = []
         names = []
