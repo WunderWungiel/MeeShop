@@ -7,7 +7,6 @@
  - [x] Ovi Store
  - [x] Automatic dependencies resolving
 
-
 ## Installing
 
 You need to have [Developer Mode](http://wunderwungiel.pl/MeeGo/posts/devmode-22.04.2023.html) enabled and [Aegis-hack](https://talk.maemo.org/showthread.php?t=90750).
@@ -43,11 +42,12 @@ Just **run MeeShop** from applications menu while being connected to Internet. Y
 Each function will ask you for something - you need to enter your "answer" and press **Enter** to confirm.
 To **go back** (almost) anytime, press **0** when MeeShop asks you for something.
 
-## Screenshots
+## Packaging MeeShop yourself
+
+You can package MeeShop yourself! Just run `build_deb.sh` script in current directory. A MeeShop DEB will appear in few seconds, ready to be installed. Note: using nightly branch is unrecommended, because it containts latest, developed right now and not properly tested functions!
 
 ## Credits
 
  - [IarChep / Ярослав](https://t.me/iaroslavchep) - icon, splash, inexhaustible help and ingenuity!
- - [Python](https://python.org) for making an easy to learn, power programming language
- - [tqdm](https://github.com/tqdm/tqdm) developers for CLI progress bar
- - [Linux Mobile World](https://t.me/linuxmobile_world) community for testing this app and being nice community :)
+ - [Python](https://python.org) for making an easy to learn, power programming language.
+ - [Linux Mobile World](https://t.me/linuxmobile_world) community for testing this app and being a nice community :)
