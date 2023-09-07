@@ -3,11 +3,10 @@ from urllib.parse import quote
 import subprocess
 import time
 import sys
-sys.path.append("/opt/MeeShop/functions")
-from clean import clean
-import apt
-import dbc
-from re_decoder import re_decoder
+from .tui import clean
+from . import apt
+from . import dbc
+from .re_decoder import re_decoder
 
 db_creator = dbc.Db_creator()
 ovi_db = db_creator.ovi_db

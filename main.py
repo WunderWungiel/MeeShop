@@ -3,9 +3,8 @@
 import os
 import sys
 import subprocess
-sys.path.append("/opt/MeeShop/functions")
-import dbc
-from clean import clean
+import functions.dbc as dbc
+from functions.tui import clean, rprint
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -23,11 +22,11 @@ def main():
 
     clean()
 
-    print(" Setting up workspace...\n")
+    rprint(" Setting up workspace...")
 
     try:
-        #folder = "."
-        folder = "/opt/MeeShop/.cache"
+        folder = "."
+        #folder = "/opt/MeeShop/.cache"
         if not os.path.isdir(folder):
             if os.path.isfile(folder):
                 os.remove(folder)
@@ -36,89 +35,89 @@ def main():
         os.chdir(folder)
 
     except:
-        print(" {}Error while setting workspace...\n{}".format(red, reset))
+        rprint("{} Error while setting workspace...{}".format(red, reset))
         press_enter_to_exit()
     else:
-        print(" {}Done!\n{}".format(green, reset))
+        rprint("{} Done!{}".format(green, reset))
 
-    print(" Testing internet connection...\n")
-    _ = subprocess.call("ping wunderwungiel.pl -c 1 > /dev/null 2>&1", shell=True)
-    if _ != 0:
-        print(" {}Failed to connect, check your internet connection.\n{}".format(red, reset))
+    rprint(" Testing internet connection...")
+    result = subprocess.call("ping wunderwungiel.pl -c 1 > /dev/null 2>&1", shell=True)
+    if result != 0:
+        rprint("{} Failed to connect, check your internet connection.{}".format(red, reset))
         press_enter_to_exit()
     else:
-        print(" {}Done!\n{}".format(green, reset))
+        rprint("{} Done!{}".format(green, reset))
     
-    print(" Building databases...\n")
+    rprint(" Building databases...")
 
     db_creator = dbc.Db_creator()
 
     if db_creator.error:
-        print(" {}Failed building databases...\n{}".format(red, reset))
+        rprint("{} Failed building databases...{}".format(red, reset))
         press_enter_to_exit()
     else:
-        print(" {}Done!\n{}".format(green, reset))
+        rprint("{} Done!{}".format(green, reset))
 
     for f in os.listdir("."):
         if f.endswith(".deb"):
             os.remove(f)
 
-    print(" Checking for Aegis-hack...\n")
+    rprint(" Checking for Aegis-hack...")
 
-    if not os.path.isfile("/usr/bin/aegis-apt-get"):
-        print(" {}Aegis-install hack by CODeRUS needs to be installed.{}".format(red, reset))
-        print(" Get it here:")
-        print(" http://wunderwungiel.pl/MeeGo/apt-repo/pool/main/hack-installer_1.0.10_armel.deb")
-        print(" ")
+    """if not os.path.isfile("/usr/bin/aegis-apt-get"):
+        rprint("{} Aegis-install hack by CODeRUS needs to be installed.{}".format(red, reset), _end='\n')
+        rprint(" Get it here:", _end='\n')
+        rprint(" http://wunderwungiel.pl/MeeGo/apt-repo/pool/main/hack-installer_1.0.10_armel.deb", _end='\n')
+        rprint(" ", _end='\n')
         press_enter_to_exit()
 
     else:
-        print(" {}Done!\n{}".format(green, reset))
+        rprint("{} Done!{}".format(green, reset))"""
 
-    print(" Importing necessary modules...\n")
+    rprint(" Importing necessary modules...")
 
     try:
-        from first_menu import first_menu
-        import apt
+        from functions.first_menu import first_menu
+        import functions.apt as apt
     except ImportError:
-        print(" {}Failed importing necessary modules...\n{}".format(red, reset))
+        rprint("{} Failed importing necessary modules...{}".format(red, reset))
         press_enter_to_exit()
     else:
-        print(" {}Done!\n{}".format(green, reset))
+        rprint("{} Done!{}".format(green, reset))
 
-    print(" Testing dpkg lock state...\n")
+    rprint(" Testing dpkg lock state...")
 
     result = apt.is_dpkg_locked()
     if result:
-        print(" {}dpkg / apt-get is busy and locked...{}".format(red, reset))
-        print(" Close all dpkg / apt-get processes")
-        print(" and try again. You can also reboot phone.\n")
+        rprint("{} dpkg / apt-get is busy and locked...{}".format(red, reset), end='\n')
+        rprint(" Close all dpkg / apt-get processes", end='\n')
+        rprint(" and try again. You can also reboot phone.")
         press_enter_to_exit()
     else:
-        print(" {}Done!\n{}".format(green, reset))
+        rprint("{} Done!{}".format(green, reset))
 
 
-    if not apt.is_repo_enabled():
-
-        print(" Adding MeeShop repository...\n")
+    """if not apt.is_repo_enabled():
+        
+        rprint(" Adding MeeShop repository...\n")
 
         result = apt.add_repo()
 
         if result == "Error":
-            print(" {}Failed adding repository...\n{}".format(red, reset))
+            rprint("{} Failed adding repository...{}".format(red, reset))
             press_enter_to_exit()
         else:
-            print(" {}Done!\n{}".format(green, reset))
+            rprint("{} Done!{}".format(green, reset))
 
-        print(" Updating repositories...\n")
+        rprint(" Updating repositories...")
         
         result = apt.update()
 
         if result == "Error":
-            print(" {}Error updating repositories...{}".format(red, reset))
+            rprint("{} Error updating repositories...{}".format(red, reset))
             press_enter_to_exit()
         else:
-            print(" {}Done!\n{}".format(green, reset))
+            rprint("{} Done!{}".format(green, reset))"""
 
     while True:
         first_menu()

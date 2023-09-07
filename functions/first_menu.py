@@ -1,12 +1,11 @@
 import sys
-sys.path.append("/opt/MeeShop/functions")
-from clean import clean
-from second_menu import second_menu
-import apt
-from rss import rss
-from about import about
-from re_decoder import re_decoder
-import app_functions
+from .tui import clean, menu
+from .second_menu import second_menu
+from . import apt
+from .rss import rss
+from .about import about
+from .re_decoder import re_decoder
+from . import app_functions
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -16,52 +15,16 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
-def first_menu():
-
-    while True:
-        clean()
-        print(" ┌──────────────────────────────────────┐")
-        print(" │                                      │")
-        print(" │       ╔═══════════════════════╗      │")
-        print(" │       ║  Welcome to {}MeeShop{}!  ║      │".format(cyan, reset))
-        print(" │       ╚═══════════════════════╝      │")
-        print(" │                                      │")
-        print(" │       {}Select category / option{}       │".format(blink, reset))
-        print(" │                                      │")
-        print(" │         1. Applications              │")
-        print(" │         2. Ovi Store                 │")
-        print(" │                                      │")
-        print(" │         3. RSS Feeds                 │")
-        print(" │         4. APT fixer                 │")
-        print(" │         5. Update repository         │")
-        print(" │                                      │")
-        print(" │         6. Check for updates         │")
-        print(" │         7. About                     │")
-        print(" │                                      │")
-        print(" │         0. Exit                      │")
-        print(" │                                      │")
-        print(" └──────────────────────────────────────┘ \n")
-        supported = range(0, 8)
-        category = input(" ")
-        print()
-        if not category:
-            clean()
-            continue
-        if not category.isnumeric() or int(category) not in supported:
-            continue
-        else:
-            break
-    
-    if category == "1":
-        
+class Options_Actions:
+    def __init__(self):
+        pass
+    def second_menu(self):
         while True:
             _ = second_menu()
             if _ == "Break":
                 clean()
                 break
-
-    elif category == "2":
-
+    def ovi_store(self):
         while True:
             while True:
                 clean()
@@ -84,18 +47,13 @@ def first_menu():
             query = re_decoder(query)
             app_functions.ovi_search(query=query)
             clean()
-
-    elif category == "3":
+    def rss_feeds(self):
         rss()
         clean()
-        return
-    elif category == "4":
+    def apt_fixer(self):
         apt.fix()
         clean()
-        return
-    
-    elif category == "5":
-
+    def update_repository(self):
         print(" Updating repositories...\n")
         
         result = apt.update()
@@ -108,17 +66,32 @@ def first_menu():
 
         input(" {}{}Press Enter to return... {}".format(blink, cyan, reset))
         clean()
-        return
-
-    elif category == "6":
+    def check_for_updates(self):
         apt.meeshop_update()
         clean()
-        return
-
-    elif category == "7":
+    def about(self):
         about()
         clean()
-        return
-    else:
-        clean()
+    def exit(self):
         sys.exit(0)
+
+options_actions = Options_Actions()
+
+def first_menu():
+
+    text = "Welcome to MeeShop!"
+
+    options = {
+        'Applications': options_actions.second_menu,
+        'Ovi Store': options_actions.ovi_store,
+        'RSS Feeds': options_actions.rss_feeds,
+        'APT Fixer': options_actions.apt_fixer,
+        'Update repository': options_actions.update_repository,
+        'Check for updates': options_actions.check_for_updates,
+        'About': options_actions.about,
+        'Exit': options_actions.exit
+    }
+
+    while True:
+        clean()
+        menu(text, options)

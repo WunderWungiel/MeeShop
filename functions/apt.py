@@ -6,9 +6,8 @@ from urllib.request import urlopen
 from urllib.parse import urljoin
 from urllib.error import HTTPError, URLError
 import shutil
-sys.path.append("/opt/MeeShop/functions")
 from tqdm import tqdm
-import dbc
+from . import dbc
 
 db_creator = dbc.Db_creator()
 ovi_db = db_creator.ovi_db

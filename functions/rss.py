@@ -3,10 +3,7 @@ from urllib.request import urlopen
 from urllib.error import URLError, HTTPError
 import subprocess
 from xml.etree import ElementTree as ET
-import sys
-sys.path.append("/opt/MeeShop/functions")
-
-from clean import clean
+from .tui import clean
 
 blue = '\033[96m'
 red = '\033[31m'

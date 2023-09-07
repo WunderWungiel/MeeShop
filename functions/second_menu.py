@@ -1,9 +1,8 @@
 import sys
-sys.path.append("/opt/MeeShop/functions")
-from clean import clean
-import app_functions
-from re_decoder import re_decoder
-import dbc
+from .tui import clean, menu
+from . import app_functions
+from .re_decoder import re_decoder
+from . import dbc
 
 db_creator = dbc.Db_creator()
 ovi_db = db_creator.ovi_db
@@ -17,38 +16,11 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
-def second_menu():
-
-    while True:
+class Options_Actions:
+    def __init__(self):
+        pass
+    def search(self):
         while True:
-            clean()
-            print(" ┌──────────────────────────────────────┐")
-            print(" │                                      │")
-            print(" │       ╔═══════════════════════╗      │")
-            print(" │       ║  Welcome to {}MeeShop{}!  ║      │".format(cyan, reset))
-            print(" │       ╚═══════════════════════╝      │")
-            print(" │                                      │")
-            print(" │          Select an option:           │")
-            print(" │                                      │")
-            print(" │             1. Search                │")
-            print(" │             2. Categories            │")
-            print(" │                                      │")
-            print(" │             0. Return                │")
-            print(" │                                      │")
-            print(" └──────────────────────────────────────┘ \n")
-            option = input(" ")
-            if not option:
-                clean()
-                continue
-            print()
-            if option not in ["1", "2", "0"]:
-                print(" {}Wrong number, select a correct one!{}".format(red, reset))
-                print(" ")
-                continue
-            else:
-                break
-
-        if option == "1":
             clean()
             print(" ┌──────────────────────────────────────┐")
             print(" │                                      │")
@@ -62,63 +34,68 @@ def second_menu():
                 clean()
                 continue
             if query == "0":
-                clean()
-                continue
+                return "Break"
             else:
                 query = re_decoder(query)
                 app_functions.search(query=query, category="full")
                 clean()
+    def categories(self):
+        while True:
+            clean()
+            print(" ┌──────────────────────────────────────┐")
+            print(" │                                      │")
+            print(" │           ╔══════════════╗           │")
+            print(" │           ║  Categories: ║           │")
+            print(" │           ╚══════════════╝           │")
+            print(" │                                      │")
 
-        elif option == "2":
+            dbs = {}
+
+            for i, category in enumerate(categories.keys(), start=1):
+                dbs[str(i)] = category
+
+                name = categories[category]["name"]
+
+                text = "           {}. {}".format(str(i), name)
+                lenght = " " * int((38 - len(text)))
+                text = text = "           {}. {}{}".format(str(i), name, lenght)
+                print(" │{}│".format(text))
+
+
+            print(" │                                      │")
+            print(" │           0. Return                  │")
+            print(" │                                      │")
+            print(" └──────────────────────────────────────┘ \n")
 
             while True:
-                clean()
-                print(" ┌──────────────────────────────────────┐")
-                print(" │                                      │")
-                print(" │           ╔══════════════╗           │")
-                print(" │           ║  Categories: ║           │")
-                print(" │           ╚══════════════╝           │")
-                print(" │                                      │")
+                answer = input(" {}Select category or return:{} ".format(cyan, reset))
 
-                dbs = {}
+                if answer == "0":
+                    return "Break"
+                if not answer.isnumeric() or answer not in dbs.keys():
+                    continue
 
-                for i, category in enumerate(categories.keys(), start=1):
-                    dbs[str(i)] = category
+                _ = app_functions.show_apps(dbs[answer])
+                if _ == "Break":
+                    return "Break"
 
-                    name = categories[category]["name"]
+    def exit(self):
+        return "Exit"
 
-                    text = "           {}. {}".format(str(i), name)
-                    lenght = " " * int((38 - len(text)))
-                    text = text = "           {}. {}{}".format(str(i), name, lenght)
-                    print(" │{}│".format(text))
+options_actions = Options_Actions()
 
+def second_menu():
 
-                print(" │                                      │")
-                print(" │           0. Return                  │")
-                print(" │                                      │")
-                print(" └──────────────────────────────────────┘ \n")
+    text = "Welcome to MeeShop!"
 
- 
+    options = {
+        'Search': options_actions.search,
+        'Categories': options_actions.categories,
+        'Return': options_actions.exit
+    }
 
-                _break = None
-
-                while True:
-                    answer = input(" {}Select category or return:{} ".format(cyan, reset))
-
-                    if answer == "0":
-                        _break = True
-                        break
-
-                    if not answer.isnumeric() or answer not in dbs.keys():
-                        continue
-
-                    _ = app_functions.show_apps(dbs[answer])
-                    if _ == "Break":
-                        break
-
-                if _break:
-                    _break = None
-                    break
-
-        elif option == "0":
+    while True:
+        clean()
+        result = menu(text, options)
+        if result == "Exit":
             return "Break"
