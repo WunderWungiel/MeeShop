@@ -11,7 +11,7 @@ cyan='\033[1;36m'
 set -e
 
 rm -rf tmp *.deb
-rm -rf functions/__pycache__ functions/tqdm/__pycache__
+rm -rf lib/__pycache__
 
 if ! command -v dpkg-deb > /dev/null 2>&1; then
     echo -e " $red"dpkg-dev not available..."$reset"
@@ -35,7 +35,7 @@ cp ../res/icon80.png usr/share/icons/hicolor/80x80/apps/MeeShop80.png
 cp ../res/splash.png opt/MeeShop/
 
 cp ../main.py opt/MeeShop
-cp -r ../functions opt/MeeShop/
+cp -r ../lib opt/MeeShop/
 
 package="meeshop"
 version="$1"

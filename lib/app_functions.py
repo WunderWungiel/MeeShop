@@ -3,7 +3,7 @@ from urllib.parse import quote
 import subprocess
 import time
 import sys
-from .tui import clean
+from . import tui
 from . import apt
 from . import dbc
 from .re_decoder import re_decoder
@@ -20,8 +20,59 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
+class Ovi_App_Options_Actions:
+    def __init__(self):
+        pass
+    def download_install(self, *args):
+        file, link = args
+        apt.ovi_download(file="{}_armel.deb".format(file), link=link, prompt=False)
+        try:
+            apt.ovi_install(display_name="{}_armel.deb".format(file), filename="{}_armel.deb".format(file))
+        except Exception as e:
+            print(" Error {}{}{}! Report to developer.".format(red, e, reset))
+            input(" {}{}Press Enter to exit... {}".format(blink, cyan, reset))
+            sys.exit(1)
+    def download(self, *args):
+        file, link = args
+        apt.ovi_download(file="{}_armel.deb".format(file), link=link, prompt=True, mydocs=True)
+        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+    def exit(self):
+        return "Break"
+
+class App_Options_Actions:
+    def __init__(self):
+        pass
+    def download_install(self, *args):
+        package = args[0]
+        try:
+            apt.install(package)
+        except Exception as e:
+            print(" Error {}{}{}! Report to developer.".format(red, e, reset))
+            input(" {}{}Press Enter to exit... {}".format(blink, cyan, reset))
+    def download(self, *args):
+        package = args[0]
+        apt.download(package)
+        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+    def open_with_browser(self, *args):
+        link = args[0]
+        subprocess.Popen("/usr/bin/invoker --type=m /usr/bin/grob {} > /dev/null 2>&1".format(link), shell=True)
+        time.sleep(1.5)
+        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+    def uninstall(self, *args):
+        package = args[0]
+        try:
+            apt.uninstall(package)
+        except Exception as e:
+            print(" Error {}{}{}! Report to developer.".format(red, e, reset))
+            input(" {}{}Press Enter to exit... {}".format(blink, cyan, reset))
+    def exit(self):
+        return "Break"
+        
+ovi_app_options_actions = Ovi_App_Options_Actions()
+app_options_actions = App_Options_Actions()
+
 def ask_for_search(category):
-    clean()
+    tui.clean()
     print(" ┌──────────────────────────────────────┐")
     print(" │                                      │")
     print(" │             ╔══════════╗             │")
@@ -42,155 +93,99 @@ def app(package):
     
     db = categories["full"]["db"]
 
-    clean()
+    tui.clean()
 
-    print(" ┌──────────────────────────────────────┐")
-    print(" │                                      │")
     display_name = db[package]['display_name']
     if len(display_name) % 2 != 0:
         display_name = display_name + " "
     lenght = " " * int((38 - len(display_name)) / 2)
-    print(" │{}{}{}│".format(lenght, display_name, lenght))
-
-    print(" │                                      │")
-
+    
+    custom_text = f""" │{lenght}{display_name}{lenght}│
+ │                                      │"""
+    
     if apt.is_installed(package):
         lenght = " " * int((38 - 13 - len(package)))
-        print(" │  Package: {} ✓{}│".format(package, lenght))
+        custom_text += "\n │  Package: {} ✓{}│".format(package, lenght)
     else:
         lenght = " " * int((38 - 11 - len(package)))
-        print(" │  Package: {}{}│".format(package, lenght))
+        custom_text += "\n │  Package: {}{}│".format(package, lenght)
 
     size = db[package]['size']
 
     lenght = " " * int((38 - 8 - len(size)))
-    print(" │  Size: {}{}│".format(size, lenght))
+    custom_text += "\n │  Size: {}{}│".format(size, lenght)
 
     version = db[package]['version']
 
     lenght = " " * int((38 - 11 - len(version)))
-    print(" │  Version: {}{}│".format(version, lenght))
+    custom_text += "\n │  Version: {}{}│".format(version, lenght)
 
     developer = db[package]['developer']
 
     lenght = " " * int((38 - 14 - len(developer)))
-    print(" │  Maintainer: {}{}│".format(developer, lenght))
-    print(" │                                      │")
-    
+    custom_text += """
+ │  Maintainer: {}{}│
+ │                                      │""".format(developer, lenght)
+
     link = "MeeGo/openrepos/" + db[package]['file']
     link = quote(link)
     link = "http://wunderwungiel.pl/" + link
 
     if apt.is_installed(package):
-        print(" │      1. Uninstall                    │")
-        print(" │      2. Download                     │")
-        print(" │      3. Open with browser            │")
+        options = {
+            'Uninstall': app_options_actions.uninstall,
+            'Download': app_options_actions.download,
+            'Download with browser': app_options_actions.open_with_browser,
+            'Return': app_options_actions.exit
+        }
 
-        functions = {
-            '1': 'uninstall',
-            '2': 'download',
-            '3': 'open_browser',
-            '0': 'return'
+        args = {
+            'Uninstall': [package],
+            'Download': [package],
+            'Open with browser': [link]
         }
 
     else:
-        print(" │      1. Download & install           │")
-        print(" │      2. Download                     │")
-        print(" │      3. Open with browser            │")
-
-        functions = {
-            '1': 'install',
-            '2': 'download',
-            '3': 'open_browser',
-            '0': 'return'
+        options = {
+            'Download & install': app_options_actions.download_install,
+            'Download': app_options_actions.download,
+            'Download with browser': app_options_actions.open_with_browser,
+            'Return': app_options_actions.exit
         }
 
-    print(" │                                      │")
-    print(" │      0. Return                       │")
-    print(" │                                      │")
-    print(" └──────────────────────────────────────┘\n")
+        args = {
+            'Download & install': [package],
+            'Download': [package],
+            'Open with browser': [link]
+        }
 
     while True:
-        answer = input(" ")
-        print()
-        if not answer:
-            continue
-        if not answer.isnumeric() or answer not in functions.keys():
-            continue
-        else:
-            break
-
-    action = functions[answer]
-
-    if action == "uninstall":
-        
-        apt.uninstall(package)
-
-    elif action == "install":
-
-        try:
-            apt.install(package)
-        except Exception as e:
-            print(" Error {}{}{}! Report to developer.".format(red, e, reset))
-            input(" {}{}Press Enter to exit... {}".format(blink, cyan, reset))
-            sys.exit(1)
-
-    elif action == "download":
-
-        apt.download(package)
-        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
-
-    elif action == "open_browser":
-        subprocess.Popen("/usr/bin/invoker --type=m /usr/bin/grob {} > /dev/null 2>&1".format(link), shell=True)
-        time.sleep(1.5)
-        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
-    
-    elif action == "return":
-        return "Break"
+        tui.clean()
+        result = tui.menu(options=options, args=args, custom_text=custom_text)
+        if result:
+            return result
 
 def ovi_app(file, link):
-    clean()
+    tui.clean()
 
-    print(" ┌──────────────────────────────────────┐")
-    print(" │                                      │")
-    if len(file) % 2 != 0:
-        file = file + " "
-    lenght = " " * int((38 - len(file)) / 2)
-    print(" │{}{}{}│".format(lenght, file, lenght))
+    options = {
+        'Download & install': ovi_app_options_actions.download_install,
+        'Download': ovi_app_options_actions.download,
+        'Return': ovi_app_options_actions.exit
+    }
 
-    print(" │                                      │")
-    print(" │      1. Download & install           │")
-    print(" │      2. Download                     │")
-    print(" │                                      │")
-    print(" │      0. Return                       │")
-    print(" │                                      │")
-    print(" └──────────────────────────────────────┘\n")
+    args = {
+        'Download & install': [file, link],
+        'Download': [file, link]
+    }
+
+    text = file.replace(".deb", '')
 
     while True:
-        category = input(" ")
-        print()
-        if not category:
-            continue
-        if not category.isnumeric() or category not in ["1", "2", "0"]:
-            continue
-        else:
-            break
-    if category == "1":
-        
-        apt.ovi_download(file="{}_armel.deb".format(file), link=link, prompt=False)
-        try:
-            apt.ovi_install(display_name="{}_armel.deb".format(file), filename="{}_armel.deb".format(file))
-        except Exception as e:
-            print(" Error {}{}{}! Report to developer.".format(red, e, reset))
-            input(" {}{}Press Enter to exit... {}".format(blink, cyan, reset))
-            sys.exit(1)
-
-    elif category == "2":
-
-        apt.ovi_download(file="{}_armel.deb".format(file), link=link, prompt=True, mydocs=True)
-        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
-    elif category == "0":
-        return "Break"
+        tui.clean()
+        result = tui.menu(options=options, text=text, args=args)
+        if result:
+            return result
 
 def ovi_search(query):
 
@@ -214,12 +209,12 @@ def ovi_search(query):
         input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
         return "Break"
 
-    clean()
+    tui.clean()
 
     print()
 
     while True:
-        clean()
+        tui.clean()
         print(" ┌──────────────────────────────────────┐")
         print(" │                                      │")
         print(" │         ╔══════════════════╗         │")
@@ -262,7 +257,7 @@ def ovi_search(query):
             _ = ovi_app(file=file, link=links[file])
             if _ == "Break":
                 break
-        clean()
+        tui.clean()
 
 def search(query, category="full"):
 
@@ -289,7 +284,7 @@ def search(query, category="full"):
                 packages[value['display_name']] = key
     
     while True:
-        clean()
+        tui.clean()
         print(" ┌──────────────────────────────────────┐")
         print(" │                                      │")
         print(" │         ╔══════════════════╗         │")
@@ -337,7 +332,7 @@ def search(query, category="full"):
             _ = app(package=package)
             if _ == "Break":
                 break
-        clean()
+        tui.clean()
 
 def show_apps(category="full"):
 
@@ -350,7 +345,7 @@ def show_apps(category="full"):
         numbers.append(str(i))
         db_list.append(pkg)
 
-    clean()
+    tui.clean()
     print(" ┌──────────────────────────────────────┐")
     print(" │                                      │")
     print(" │         ╔════════════════════╗       │")

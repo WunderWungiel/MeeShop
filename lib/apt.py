@@ -14,6 +14,9 @@ ovi_db = db_creator.ovi_db
 categories = db_creator.categories
 full_db = categories["full"]["db"]
 
+folder = "."
+#folder = "/home/user/MyDocs/"
+
 blue = '\033[96m'
 red = '\033[31m'
 reset = '\033[0m'
@@ -81,7 +84,7 @@ def download(package):
         total_size_in_bytes = int(response.headers.get('Content-Length', 0))
         block_size = 1024
         progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
-        f = open(os.path.join("/home/user/MyDocs/", file), "wb")
+        f = open(os.path.join(folder, file), "wb")
         while True:
             data = response.read(block_size)
             if not data:
@@ -109,7 +112,7 @@ def ovi_download(file, link, prompt=True, mydocs=False):
         block_size = 1024
         progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
         if mydocs:
-            f = open(os.path.join("/home/user/MyDocs/", file), "wb")
+            f = open(os.path.join(folder, file), "wb")
         else:
             f = open(file, "wb")
         while True:

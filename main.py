@@ -3,8 +3,8 @@
 import os
 import sys
 import subprocess
-import functions.dbc as dbc
-from functions.tui import clean, rprint
+import lib.dbc as dbc
+import lib.tui as tui
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -14,13 +14,15 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
+rprint = tui.rprint
+
 def press_enter_to_exit():
     input(" {}{}Press Enter to exit... {}".format(blink, cyan, reset))
     sys.exit(1)
 
 def main():
 
-    clean()
+    tui.clean()
 
     rprint(" Setting up workspace...")
 
@@ -77,8 +79,8 @@ def main():
     rprint(" Importing necessary modules...")
 
     try:
-        from functions.first_menu import first_menu
-        import functions.apt as apt
+        from lib.first_menu import first_menu
+        import lib.apt as apt
     except ImportError:
         rprint("{} Failed importing necessary modules...{}".format(red, reset))
         press_enter_to_exit()
@@ -121,7 +123,7 @@ def main():
 
     while True:
         first_menu()
-        clean()
+        tui.clean()
 
 if __name__ == "__main__":
     main()

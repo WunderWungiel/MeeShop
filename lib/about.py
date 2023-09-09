@@ -1,4 +1,4 @@
-from .tui import clean
+from . import tui
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -10,7 +10,7 @@ cyan = '\033[1;36m'
 
 def about():
 
-    clean()
+    tui.clean()
 
     print(" ┌──────────────────────────────────────┐")
     print(" │                                      │")
@@ -35,4 +35,4 @@ def about():
     print(" │                                      │")
     print(" └──────────────────────────────────────┘ \n")
     input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
-    clean()
+    tui.clean()

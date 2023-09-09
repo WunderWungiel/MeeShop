@@ -1,5 +1,5 @@
 import sys
-from .tui import clean, menu
+from . import tui
 from .second_menu import second_menu
 from . import apt
 from .rss import rss
@@ -22,12 +22,12 @@ class Options_Actions:
         while True:
             _ = second_menu()
             if _ == "Break":
-                clean()
+                tui.clean()
                 break
     def ovi_store(self):
         while True:
             while True:
-                clean()
+                tui.clean()
                 print(" ┌──────────────────────────────────────┐")
                 print(" │                                      │")
                 print(" │             ╔══════════╗             │")
@@ -37,22 +37,22 @@ class Options_Actions:
                 print(" └──────────────────────────────────────┘ \n")
                 query = input(" {}Query to search:{} ".format(yellow, reset))
                 if not query:
-                    clean()
+                    tui.clean()
                     continue
                 if query == "0":
-                    clean()
+                    tui.clean()
                     return "Break"
                 else:
                     break
             query = re_decoder(query)
             app_functions.ovi_search(query=query)
-            clean()
+            tui.clean()
     def rss_feeds(self):
         rss()
-        clean()
+        tui.clean()
     def apt_fixer(self):
         apt.fix()
-        clean()
+        tui.clean()
     def update_repository(self):
         print(" Updating repositories...\n")
         
@@ -65,13 +65,13 @@ class Options_Actions:
             print(" {}Done!\n{}".format(green, reset))
 
         input(" {}{}Press Enter to return... {}".format(blink, cyan, reset))
-        clean()
+        tui.clean()
     def check_for_updates(self):
         apt.meeshop_update()
-        clean()
+        tui.clean()
     def about(self):
         about()
-        clean()
+        tui.clean()
     def exit(self):
         sys.exit(0)
 
@@ -93,5 +93,7 @@ def first_menu():
     }
 
     while True:
-        clean()
-        menu(text, options)
+        tui.clean()
+        result = tui.menu(options=options, text=text)
+        if result:
+            return result

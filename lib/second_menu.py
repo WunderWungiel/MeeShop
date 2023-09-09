@@ -1,5 +1,4 @@
-import sys
-from .tui import clean, menu
+from . import tui
 from . import app_functions
 from .re_decoder import re_decoder
 from . import dbc
@@ -21,7 +20,7 @@ class Options_Actions:
         pass
     def search(self):
         while True:
-            clean()
+            tui.clean()
             print(" ┌──────────────────────────────────────┐")
             print(" │                                      │")
             print(" │             ╔══════════╗             │")
@@ -31,17 +30,17 @@ class Options_Actions:
             print(" └──────────────────────────────────────┘ \n")
             query = input(" {}Query to search:{} ".format(yellow, reset))
             if not query:
-                clean()
+                tui.clean()
                 continue
             if query == "0":
                 return "Break"
             else:
                 query = re_decoder(query)
                 app_functions.search(query=query, category="full")
-                clean()
+                tui.clean()
     def categories(self):
         while True:
-            clean()
+            tui.clean()
             print(" ┌──────────────────────────────────────┐")
             print(" │                                      │")
             print(" │           ╔══════════════╗           │")
@@ -95,7 +94,7 @@ def second_menu():
     }
 
     while True:
-        clean()
-        result = menu(text, options)
+        tui.clean()
+        result = tui.menu(options=options, text=text)
         if result == "Exit":
             return "Break"

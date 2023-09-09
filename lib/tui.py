@@ -1,8 +1,22 @@
+"""`menu()` takes three arguments:
+
+- `options`: a dictionary with following syntax:
+
+`{'name': action, 'name2': action2}`
+
+- `text` (optional) - a title to display
+- `args` - optional args to pass to function with following syntax:
+
+`{'name': ['arg1', 'arg2'], 'name2': ['arg1', 'arg2', 'arg3]}`
+
+Before running menu() it's advised to run tui.clean() first.
+"""
 import subprocess
 import sys
 from time import sleep
 import tty
 import termios
+import os
 
 cyan = '\033[38;5;104m'
 cyan_background = '\033[48;5;104m'
@@ -44,12 +58,14 @@ def get_arrow_key():
                     return "up"
                 elif ch == '[B':
                     return "down"
+                elif ch == '[F':
+                    return "end"
+                elif ch == '[H':
+                    return "home"
             elif ch == "\x03":
-                sys.exit(0)
+                raise KeyboardInterrupt
             elif ch == "\r":
-                return "enter"
-            elif ch == "\x1b[1;5F":
-                return "end"               
+                return "enter"             
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
@@ -64,7 +80,7 @@ def get_enter_key():
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
-def menu(text, options):
+def menu(options, text=None, args=None, custom_text=None):
 
     options_names = list(options.keys())
     options_actions = list(options.values())
@@ -81,53 +97,49 @@ def menu(text, options):
 
     while True:
 
-        if not first_iteration:
+        """if not first_iteration:
 
-            to_clean = "\x1b[" + str(len(options_names) + 9) + "A"
+            if text:
+                to_clean = "\x1b[" + str(len(options_names) + 8) + "A"
+            elif custom_text:
+                lines_count = len(custom_text.splitlines())
+                to_clean = "\x1b[" + str(len(options_names) + lines_count + 5) + "A"
+            else:
+                to_clean = "\x1b[" + str(len(options_names) + 5) + "A"
 
             sys.stdout.write(to_clean)
             sys.stdout.write("\x1b[0J")
             sys.stdout.flush()
+            #clear_terminal_to_marker(" └──────────────────────────────────────┘")
 
-        first_iteration = False
-
+        else:
+            first_iteration = False""" #deprecated
         clean()
 
+        
         print(" ┌──────────────────────────────────────┐")
         print(" │                                      │")
         
-        if len(text) % 2 != 0:
-            text += " "
+        if text:
+            if len(text) % 2 != 0:
+                text = " " + text
 
-        
-       #print(" │       ╔═══════════════════════╗      │")
+            spaces_count = (38 - len(text) - 6) // 2
+            spaces = " " * spaces_count
+            gora_count = 38 - (spaces_count * 2) - 2
+            gora_spacje = "═" * gora_count
+            gora_ramki = f" │{spaces}╔{gora_spacje}╗{spaces}│"
+            print(gora_ramki)
 
-        spaces_count = (38 - len(text) - 6) // 2
-        spaces = " " * spaces_count
-        gora_count = 38 - (spaces_count * 2) - 2
-        gora_spacje = "═" * gora_count
-        gora_ramki = f" │{spaces}╔{gora_spacje}╗{spaces}│"
-        print(gora_ramki)
+            srodek_ramki = f" │{spaces}║  {text}  ║{spaces}│"
+            print(srodek_ramki)
 
-        ###
+            gora_ramki = f" │{spaces}╚{gora_spacje}╝{spaces}│"
+            print(gora_ramki)        
 
-        spaces_count = (38 - len(text) - 6) // 2
-        spaces = " " * spaces_count
-        spaces_inside_count = ((len(text)) - (spaces_count * 2) - 4) // 2
-        spaces_inside = " " * spaces_inside_count
-
-        print(f" │{spaces}║{spaces_inside}{text}{spaces_inside}║{spaces}│")
-
-        ###
-
-        spaces_count = (38 - len(text) - 6) // 2
-        spaces = " " * spaces_count
-        gora_count = 38 - (spaces_count * 2) - 2
-        gora_spacje = "═" * gora_count
-        gora_ramki = f" │{spaces}╚{gora_spacje}╝{spaces}│"
-        print(gora_ramki)        
-
-        print(" │                                      │")
+            print(" │                                      │")
+        elif custom_text:
+            print(custom_text)
 
         for i, name in zip(options_integers, options_names):
 
@@ -165,12 +177,19 @@ def menu(text, options):
             current_chosen -= 1
         elif key == "enter":
             user_choose = current_chosen
-            result = options_actions[options_integers.index(user_choose)]()
+
+            if args:
+                user_choose_name = options_names[options_integers.index(user_choose)]
+                if user_choose_name in args.keys():
+                    args_list = list(args.get(user_choose_name))
+                    result = options_actions[options_integers.index(user_choose)](*args_list)
+                else:
+                    result = options_actions[options_integers.index(user_choose)]()
+            else:
+                result = options_actions[options_integers.index(user_choose)]()
             if result:
                 return result
-            #get_enter_key()
-            #sys.stdout.write("\x1b[1A")
-            #sys.stdout.write("\x1b[0J")
-            #sys.stdout.flush()
         elif key == "end":
             current_chosen = options_integers[-1]
+        elif key == "home":
+            current_chosen = options_integers[0]
