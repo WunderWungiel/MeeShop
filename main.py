@@ -1,4 +1,4 @@
-#!/usr/bin/python3.1
+#!/opt/python/bin/python3.9
 
 import os
 import sys
@@ -66,7 +66,7 @@ def main():
 
     rprint(" Checking for Aegis-hack...")
 
-    """if not os.path.isfile("/usr/bin/aegis-apt-get"):
+    if not os.path.isfile("/usr/bin/aegis-apt-get"):
         rprint("{} Aegis-install hack by CODeRUS needs to be installed.{}".format(red, reset), _end='\n')
         rprint(" Get it here:", _end='\n')
         rprint(" http://wunderwungiel.pl/MeeGo/apt-repo/pool/main/hack-installer_1.0.10_armel.deb", _end='\n')
@@ -74,7 +74,7 @@ def main():
         press_enter_to_exit()
 
     else:
-        rprint("{} Done!{}".format(green, reset))"""
+        rprint("{} Done!{}".format(green, reset))
 
     rprint(" Importing necessary modules...")
 
@@ -99,7 +99,7 @@ def main():
         rprint("{} Done!{}".format(green, reset))
 
 
-    """if not apt.is_repo_enabled():
+    if not apt.is_repo_enabled():
         
         rprint(" Adding MeeShop repository...\n")
 
@@ -119,7 +119,7 @@ def main():
             rprint("{} Error updating repositories...{}".format(red, reset))
             press_enter_to_exit()
         else:
-            rprint("{} Done!{}".format(green, reset))"""
+            rprint("{} Done!{}".format(green, reset))
 
     while True:
         first_menu()

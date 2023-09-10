@@ -6,7 +6,7 @@ source /tmp/session_bus_address.user
 
 case "$1" in
     remove)
-dbus-send --print-reply --dest=com.meego.core.MNotificationManager /notificationmanager com.meego.core.MNotificationManager.addNotification uint32:1000 uint32:0 string:'custom' string:'MeeShop' string:'MeeShop v0.2.0 removed successfully.' string:'' string:'' uint32:0 > /dev/null
+dbus-send --print-reply --dest=com.meego.core.MNotificationManager /notificationmanager com.meego.core.MNotificationManager.addNotification uint32:1000 uint32:0 string:'custom' string:'MeeShop' string:'MeeShop v0.3.0 removed successfully.' string:'' string:'' uint32:0 > /dev/null
 rm -rf /opt/MeeShop  ;;
 
     purge) rm -rf /opt/MeeShop ;;
