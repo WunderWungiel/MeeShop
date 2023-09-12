@@ -41,7 +41,7 @@ class Country_Feeds_Options:
 
         subprocess.Popen("/usr/bin/invoker --type=m /usr/bin/grob {} > /dev/null 2>&1".format(link), shell=True)
         time.sleep(1.5)
-        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+        tui.press_enter()()
     def exit(self):
         return "Break"
 
@@ -58,7 +58,7 @@ def rss():
         r = urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/countries.xml")
     except (URLError, HTTPError):
         print(" {}Error while downloading content!{}".format(red, reset))
-        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+        tui.press_enter()()
         return
     root_string = r.read().decode("utf-8")
 
@@ -98,7 +98,7 @@ def country_feeds(country, country_file):
         r = urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/{}".format(country_file))
     except (URLError, HTTPError):
         print(" {}Error while downloading content!{}".format(red, reset))
-        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+        tui.press_enter()()
         return "Break"
     
     root_string = r.read().decode("utf-8")

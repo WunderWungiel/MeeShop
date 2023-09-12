@@ -1,22 +1,8 @@
-"""`menu()` takes three arguments:
-
-- `options`: a dictionary with following syntax:
-
-`{'name': action, 'name2': action2}`
-
-- `text` (optional) - a title to display
-- `args` - optional args to pass to function with following syntax:
-
-`{'name': ['arg1', 'arg2'], 'name2': ['arg1', 'arg2', 'arg3]}`
-
-Before running menu() it's advised to run tui.clean() first.
-"""
 import subprocess
 import sys
 from time import sleep
 import tty
 import termios
-import os
 
 cyan = '\033[38;5;104m'
 cyan_background = '\033[48;5;104m'
@@ -33,7 +19,7 @@ yellow = '\033[33m'
 def clean():
     subprocess.call("clear")
 
-def rprint(text, time=0.02, previous_text='', _end="\n\n"):
+def rprint(text='', time=0.02, previous_text='', _end="\n\n"):
     for s in text:
 
         s = "\r" + previous_text + s
@@ -43,7 +29,13 @@ def rprint(text, time=0.02, previous_text='', _end="\n\n"):
         sleep(time)
     print(_end, end='')
 
-def get_arrow_key():
+def rinput(text='', time=0.0235, previous_text='', _end=''):
+    rprint(text=text, time=time, previous_text=previous_text, _end=_end)
+    answer = input()
+    if answer:
+        return answer
+
+def get_key():
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     
@@ -53,32 +45,23 @@ def get_arrow_key():
             ch = sys.stdin.read(1)
         
             if ch == '\x1b':
-                ch = sys.stdin.read(2)
-                if ch == '[A':
+                ch2 = sys.stdin.read(2)
+                if ch2 == "[A":
                     return "up"
-                elif ch == '[B':
+                elif ch2 == '[B':
                     return "down"
-                elif ch == '[F':
+                elif ch2 == '[F':
                     return "end"
-                elif ch == '[H':
+                elif ch2 == '[H':
                     return "home"
             elif ch == "\x03":
                 raise KeyboardInterrupt
             elif ch == "\r":
-                return "enter"             
+                return "enter"
+            elif ch.isnumeric():
+                return ch
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
-def get_enter_key():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    
-    try:
-        tty.setraw(fd)
-        sys.stdin.read(1)
-        return "enter"              
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 def menu(options, text=None, args=None, custom_text=None):
 
@@ -110,19 +93,22 @@ def menu(options, text=None, args=None, custom_text=None):
             sys.stdout.write(to_clean)
             sys.stdout.write("\x1b[0J")
             sys.stdout.flush()
-            #clear_terminal_to_marker(" └──────────────────────────────────────┘")
+            #clear_terminal_to_marker(" ╰──────────────────────────────────────╯")
 
         else:
-            first_iteration = False""" #deprecated
+            first_iteration = False""" # deprecated but keeping for info
         clean()
 
         
-        print(" ┌──────────────────────────────────────┐")
+        print(" ╭──────────────────────────────────────╮")
         print(" │                                      │")
         
         if text:
             if len(text) % 2 != 0:
-                text = " " + text
+                if list(text)[0].isalpha():
+                    text += " "
+                else:
+                    text = " " + text
 
             spaces_count = (38 - len(text) - 6) // 2
             spaces = " " * spaces_count
@@ -167,22 +153,31 @@ def menu(options, text=None, args=None, custom_text=None):
                 spaces = " " * spaces
                 print(f" │         {i}. {name}{spaces}│")
         print(" │                                      │")
-        print(" └──────────────────────────────────────┘")
-        
-        key = get_arrow_key()
-        
+        print(" ╰──────────────────────────────────────╯")
+
+        key = get_key()
+
         if key == "down":
             current_chosen += 1
         elif key == "up":
             current_chosen -= 1
-        elif key == "enter":
-            user_choose = current_chosen
-
+        elif key.isnumeric() or key == "enter":
+            if key == "enter":
+                user_choose = current_chosen
+            elif key.isnumeric():
+                key = int(key)
+                if key not in options_integers:
+                    continue
+                current_chosen = key
+                user_choose = key
             if args:
                 user_choose_name = options_names[options_integers.index(user_choose)]
                 if user_choose_name in args.keys():
                     args_list = list(args.get(user_choose_name))
-                    result = options_actions[options_integers.index(user_choose)](*args_list)
+                    if isinstance(args_list, str):
+                        result = options_actions[options_integers.index(user_choose)](args_list)
+                    else:
+                        result = options_actions[options_integers.index(user_choose)](*args_list)
                 else:
                     result = options_actions[options_integers.index(user_choose)]()
             else:
@@ -193,3 +188,6 @@ def menu(options, text=None, args=None, custom_text=None):
             current_chosen = options_integers[-1]
         elif key == "home":
             current_chosen = options_integers[0]
+
+def press_enter():
+    rinput("{}{} Press Enter to continue... {}".format(blink, cyan, reset))

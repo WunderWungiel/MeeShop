@@ -8,6 +8,7 @@ from urllib.error import HTTPError, URLError
 import shutil
 from tqdm import tqdm
 from . import dbc
+from .tui import rprint, press_enter, rinput
 
 db_creator = dbc.Db_creator()
 ovi_db = db_creator.ovi_db
@@ -26,12 +27,20 @@ yellow = '\033[33m'
 cyan = '\033[1;36m'
 
 def update():
-    result = subprocess.call("aegis-apt-get update", shell=True, stdout=open("/dev/null", "wb"), stderr=open("/dev/null", "wb"))
-    if result != 0:
+    try:
+        process = subprocess.run(["apt-get", "update"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except PermissionError:
+        rprint(f"{red} A problem with file permissions.{reset}")
+        press_enter()
+        return "Error"
+    except FileNotFoundError:
+        rprint(f"{red} File not found.{reset}")
+        press_enter()
+        return "Error"
+    if process.returncode != 0:
         return "Error"
     
 def is_dpkg_locked():
-    
     paths = [
         "/var/lib/dpkg/lock",
         "/var/lib/apt/lists/lock"
@@ -44,11 +53,17 @@ def is_dpkg_locked():
             continue
 
         try:
-            result = subprocess.check_output("lsof {}".format(path), shell=True, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as e:
-            result = e.output
-
-        result = result.decode("utf-8")
+            process = subprocess.run(["lsof", path], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        except PermissionError:
+            rprint(f"{red} A problem with file permissions.{reset}")
+            press_enter()
+            return
+        except FileNotFoundError:
+            rprint(f"{red} File not found.{reset}")
+            press_enter()
+            return
+        
+        result = process.stdout
 
         if "dpkg.real" in result or "apt-get.real" in result:
             return True
@@ -56,14 +71,17 @@ def is_dpkg_locked():
     return False
 
 def meeshop_update():
-    if check_update('meeshop'):
-        answer = input(" {}Update available, wanna update now?{} ".format(cyan, reset))
+    status = check_update('meeshop')
+    if status == "Error":
+        return "Error"
+    if status:
+        answer = rinput("{} Update available, wanna update now?{} ".format(cyan, reset))
         if answer.lower() in ["y", "yes"]:
             try:
                 install("meeshop")
             except Exception as e:
                 print(" Error {}{}{}! Report to developer.".format(red, e, reset))
-                input(" {}{}Press Enter to exit... {}".format(blink, cyan, reset))
+                rinput("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
                 sys.exit(1)
         else:
             print(" Returning...")
@@ -71,7 +89,7 @@ def meeshop_update():
             pass
     else:
         print(" No updates available!")
-    input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+    press_enter()
 
 def download(package):
 
@@ -98,7 +116,7 @@ def download(package):
 
     except (HTTPError, URLError):
         print(" {}Error while downloading content!{}".format(red, reset))
-        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+        press_enter()
         return
 
     print()
@@ -125,7 +143,7 @@ def ovi_download(file, link, prompt=True, mydocs=False):
         progress_bar.close()
     except (HTTPError, URLError):
         print(" {}Error while downloading content!{}".format(red, reset))
-        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+        press_enter()
         return
     print()
     if prompt:
@@ -136,25 +154,28 @@ def ovi_download(file, link, prompt=True, mydocs=False):
 
 def check_update(package):
     try:
-        result = subprocess.check_output("LANG=C dpkg-query -s {}".format(package), shell=True, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        result = e.output
-    result = result.decode("utf-8")
+        process = subprocess.run(["LANG=C", "dpkg-query", "-s", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    except PermissionError:
+        rprint(f"{red} A problem with file permissions.{reset}")
+        press_enter()
+        return "Error"
+    except FileNotFoundError:
+        rprint(f"{red} File not found.{reset}")
+        press_enter()
+        return "Error"
+    result = process.stdout
     version = re.search("Version: (.+)", result)
     if not version:
         return "Error"
     version = version.group(1)
-    if version != full_db[package]['version']:
+    if version < full_db[package]['version']:
         return True
     else:
         return False
 
 def is_installed(package):
-    try:
-        result = subprocess.check_output("LANG=C dpkg-query -s {}".format(package), shell=True, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        result = e.output
-    result = result.decode("utf-8")
+    process = subprocess.run(["dpkg-query", "-s", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    result = process.stdout
     if re.search("Status:.*ok installed.*", result):
         return True
     else:
@@ -167,14 +188,18 @@ def install(package):
     print(" Installing...")
     print(" ")
 
-    command = 'LANG=C aegis-apt-get install -y --force-yes {}'.format(package)
-
     try:
-        result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
-        result = result.decode("utf-8")
-    except subprocess.CalledProcessError as e:
-        result = e.output
-        result = result.decode("utf-8")
+        process = subprocess.run(["aegis-apt-get", "install", "-y", "--force-yes", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    except PermissionError:
+        rprint(f"{red} A problem with file permissions.{reset}")
+        press_enter()
+        return
+    except FileNotFoundError:
+        rprint(f"{red} File not found.{reset}")
+        press_enter()
+        return
+    result = process.stdout
+    if process.returncode != 0:
         print(" Some error occured... Output:")
         print()
         print(" ########################################")
@@ -184,26 +209,30 @@ def install(package):
         print(" ########################################")
         print()
 
-        input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
-
+        press_enter()
         return
 
     print()
     print(" {}{} installed!{}".format(green, display_name, reset))
-    input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+    press_enter()
 
 def ovi_install(display_name, filename):
 
     print(" Installing...")
     print(" ")
     filepath = os.path.join("/opt/MeeShop/.cache", filename)
-    command = 'LANG=C aegis-dpkg -i "{}"'.format(filepath)
     try:
-        result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
-        result = result.decode("utf-8")
-    except subprocess.CalledProcessError as e:
-        result = e.output
-        result = result.decode("utf-8")
+        process = subprocess.run(["aegis-dpkg", "-i", filepath], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    except PermissionError:
+        rprint(f"{red} A problem with file permissions.{reset}")
+        press_enter()
+        return
+    except FileNotFoundError:
+        rprint(f"{red} File not found.{reset}")
+        press_enter()
+        return
+    result = process.stdout
+    if process.returncode != 0:
         depends = re.findall("depends on (.+)\s\(.+\);", result)
         if not depends:
             depends = re.findall("depends on (.+);", result)
@@ -218,7 +247,7 @@ def ovi_install(display_name, filename):
             print(" ########################################")
             print()
 
-            input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+            press_enter()
 
             return
 
@@ -229,23 +258,40 @@ def ovi_install(display_name, filename):
      
     print()
     print(" {}{} installed!{}".format(green, display_name, reset))
-    input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+    press_enter()
 
 
 def uninstall(package):
-    output = subprocess.call(
-        "LANG=C aegis-apt-get autoremove --purge -y --force-yes {}".format(package),
-        shell=True,
-        stdout=open("/dev/null", "w")
-    )
+    try:
+        output = subprocess.call(
+            ["aegis-apt-get autoremove", "--purge", "-y", "--force-yes", package],
+            env={'LANG': 'C'}
+        )
+    except PermissionError:
+        rprint(f"{red} A problem with file permissions.{reset}")
+        press_enter()
+        return
+    except FileNotFoundError:
+        rprint(f"{red} File not found.{reset}")
+        press_enter()
+        return
     if output != 0:
         print(" Something went wrong while uninstalling...\n Try uninstalling manually." )
-    input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+    press_enter()
     
 def fix():
     
-    subprocess.call("aegis-apt-get install -f", shell=True)
-    input(" {}{}Press Enter to continue... {}".format(blink, cyan, reset))
+    try:
+        subprocess.call(["aegis-apt-get", "install", "-f"])
+    except PermissionError:
+        rprint(f"{red} A problem with file permissions.{reset}")
+        press_enter()
+        return
+    except FileNotFoundError:
+        rprint(f"{red} File not found.{reset}")
+        press_enter()
+        return
+    press_enter()
 
     
 def add_repo():

@@ -21,14 +21,14 @@ class Options_Actions:
     def search(self):
         while True:
             tui.clean()
-            print(" ┌──────────────────────────────────────┐")
+            print(" ╭──────────────────────────────────────╮")
             print(" │                                      │")
             print(" │             ╔══════════╗             │")
             print(" │             ║  Search: ║             │")
             print(" │             ╚══════════╝             │")
             print(" │                                      │")
-            print(" └──────────────────────────────────────┘ \n")
-            query = input(" {}Query to search:{} ".format(yellow, reset))
+            print(" ╰──────────────────────────────────────╯ \n")
+            query = tui.rinput("{} Query to search:{} ".format(yellow, reset))
             if not query:
                 tui.clean()
                 continue
@@ -41,7 +41,7 @@ class Options_Actions:
     def categories(self):
         while True:
             tui.clean()
-            print(" ┌──────────────────────────────────────┐")
+            print(" ╭──────────────────────────────────────╮")
             print(" │                                      │")
             print(" │           ╔══════════════╗           │")
             print(" │           ║  Categories: ║           │")
@@ -64,10 +64,10 @@ class Options_Actions:
             print(" │                                      │")
             print(" │           0. Return                  │")
             print(" │                                      │")
-            print(" └──────────────────────────────────────┘ \n")
+            print(" ╰──────────────────────────────────────╯ \n")
 
             while True:
-                answer = input(" {}Select category or return:{} ".format(cyan, reset))
+                answer = tui.rinput("{} Select category or return:{} ".format(cyan, reset))
 
                 if answer == "0":
                     return "Break"

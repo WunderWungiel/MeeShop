@@ -28,14 +28,14 @@ class Options_Actions:
         while True:
             while True:
                 tui.clean()
-                print(" ┌──────────────────────────────────────┐")
+                print(" ╭──────────────────────────────────────╮")
                 print(" │                                      │")
                 print(" │             ╔══════════╗             │")
                 print(" │             ║  Search: ║             │")
                 print(" │             ╚══════════╝             │")
                 print(" │                                      │")
-                print(" └──────────────────────────────────────┘ \n")
-                query = input(" {}Query to search:{} ".format(yellow, reset))
+                print(" ╰──────────────────────────────────────╯ \n")
+                query = tui.rinput("{} Query to search:{} ".format(yellow, reset))
                 if not query:
                     tui.clean()
                     continue
@@ -54,7 +54,7 @@ class Options_Actions:
         apt.fix()
         tui.clean()
     def update_repository(self):
-        print(" Updating repositories...\n")
+        tui.rprint(" Updating repositories...")
         
         result = apt.update()
 
@@ -64,10 +64,13 @@ class Options_Actions:
         else:
             print(" {}Done!\n{}".format(green, reset))
 
-        input(" {}{}Press Enter to return... {}".format(blink, cyan, reset))
+        tui.rinput("{}{} Press Enter to return... {}".format(blink, cyan, reset))
         tui.clean()
     def check_for_updates(self):
-        apt.meeshop_update()
+        status = apt.meeshop_update()
+        if status == "Error":
+            print(f"{red} Error while checking updates...{reset}")
+            tui.press_enter()
         tui.clean()
     def about(self):
         about()
