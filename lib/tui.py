@@ -20,21 +20,22 @@ yellow = '\033[33m'
 def clean():
     subprocess.call("clear")
 
-def rprint(text='', time=0.02, previous_text='', _end="\n\n"):
+def rprint(text='', time=0.02, _end="\n\n"):
     
-    ### bash_sequences = re.findall(r'\x1B\[[0-?]*[ -/]*[@-~]', text)
-    ###
-    ### To be used in future
+    ansi_pattern = r'\x1B\[[0-?]*[ -/]*[@-~]'
+    ansi_sequences = re.split(ansi_pattern, text)
+    ansi_matches = re.findall(ansi_pattern, text)
 
-    for s in text:
+    for text_part, ansi_seq in zip(ansi_sequences, ansi_matches):
+        for char in text_part:
+            sys.stdout.write(char)
+            sys.stdout.flush()
+            sleep(time)
 
-        s = "\r" + previous_text + s
-        sys.stdout.write(s)
+        sys.stdout.write(ansi_seq)
         sys.stdout.flush()
 
-        previous_text = s
-        sleep(time)
-    print(_end, end='')
+    print('', end=_end)
 
 def get_key():
     fd = sys.stdin.fileno()
@@ -187,7 +188,7 @@ def menu(options, text=None, args=None, custom_text=None, width=38, space_left=9
         elif key == "home":
             current_chosen = options_integers[0]
 
-def frame(text=None, custom_text=None, width=38, end='\n', clean_screen=True):
+def frame(text=None, custom_text=None, width=38, end='\n', second_frame=True, clean_screen=True):
     if clean_screen:
         clean()
         
@@ -197,33 +198,51 @@ def frame(text=None, custom_text=None, width=38, end='\n', clean_screen=True):
     if text:
         lines = text.splitlines()
         lines = [line.strip() for line in lines]
-        biggest_line = max(lines, key=len)
+        raw_lines = [get_raw_string(line) for line in lines]
+        biggest_line = max(raw_lines, key=len)
 
-        spaces_count = (width - len(get_raw_string(biggest_line)) - 6) // 2
-        spaces = " " * spaces_count
-        gora_count = width - (spaces_count * 2) - 2
-        gora_spacje = "═" * gora_count
-        gora_ramki = f" │{spaces}╔{gora_spacje}╗{spaces}│"
-        print(gora_ramki)
+        if second_frame:
+        
+            spaces_count = (width - len(biggest_line) - 6) // 2
+            spaces = " " * spaces_count
+            gora_count = width - (spaces_count * 2) - 2
+            gora_spacje = "═" * gora_count
+            gora_ramki = f" │{spaces}╔{gora_spacje}╗{spaces}│"
+            print(gora_ramki)
 
-        for line in lines:
+            for line in lines:
 
-            raw_line = get_raw_string(line)
+                raw_line = get_raw_string(line)
 
-            if len(raw_line) % 2 != 0:
-                if list(raw_line)[0].isalpha():
-                    line += " "
-                else:
-                    line = " " + line
+                if len(raw_line) % 2 != 0:
+                    if list(raw_line)[0].isalpha():
+                        line += " "
+                    else:
+                        line = " " + line
 
-            spacje_w_srodku_count = (width - len(raw_line) - (spaces_count * 2) - 2) // 2
-            spacje_w_srodku = " " * spacje_w_srodku_count
+                spacje_w_srodku_count = (width - len(raw_line) - (spaces_count * 2) - 2) // 2
+                spacje_w_srodku = " " * spacje_w_srodku_count
 
-            srodek_ramki = f" │{spaces}║{spacje_w_srodku}{line}{spacje_w_srodku}║{spaces}│"
-            print(srodek_ramki)
+                srodek_ramki = f" │{spaces}║{spacje_w_srodku}{line}{spacje_w_srodku}║{spaces}│"
+                print(srodek_ramki)
 
-        gora_ramki = f" │{spaces}╚{gora_spacje}╝{spaces}│"
-        print(gora_ramki)           
+            gora_ramki = f" │{spaces}╚{gora_spacje}╝{spaces}│"
+            print(gora_ramki)           
+
+        else:
+            for line in lines:
+
+                spaces_count = (width - len(get_raw_string(line))) // 2
+                spaces = " " * spaces_count
+
+                raw_line = get_raw_string(line)
+
+                if len(raw_line) % 2 != 0:
+                    if list(raw_line)[0].isalpha():
+                        line += " "
+                    else:
+                        line = " " + line
+                print(f" │{spaces}{line}{spaces}│")
 
         print(" │{}│".format(width * " "))
         print(" ╰{}╯ {}".format(width * "─", end))
