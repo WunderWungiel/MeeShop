@@ -15,20 +15,28 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
+
+class Categories_Actions:
+    def __init__(self):
+        pass
+    def category(self, category):
+        while True:
+            _ = app_functions.show_apps(category)
+            if _ == "Break":
+                return
+    def exit(self):
+        return "Break"
+
+categories_actions = Categories_Actions()
+
 class Options_Actions:
     def __init__(self):
         pass
     def search(self):
         while True:
             tui.clean()
-            print(" ╭──────────────────────────────────────╮")
-            print(" │                                      │")
-            print(" │             ╔══════════╗             │")
-            print(" │             ║  Search: ║             │")
-            print(" │             ╚══════════╝             │")
-            print(" │                                      │")
-            print(" ╰──────────────────────────────────────╯ \n")
-            query = tui.rinput("{} Query to search:{} ".format(yellow, reset))
+            tui.frame(text="Search:")
+            query = input("{} Query to search:{} ".format(yellow, reset))
             if not query:
                 tui.clean()
                 continue
@@ -41,12 +49,9 @@ class Options_Actions:
     def categories(self):
         while True:
             tui.clean()
-            print(" ╭──────────────────────────────────────╮")
-            print(" │                                      │")
-            print(" │           ╔══════════════╗           │")
-            print(" │           ║  Categories: ║           │")
-            print(" │           ╚══════════════╝           │")
-            print(" │                                      │")
+
+            options = {}
+            args = {}
 
             dbs = {}
 
@@ -55,28 +60,15 @@ class Options_Actions:
 
                 name = categories[category]["name"]
 
-                text = "           {}. {}".format(str(i), name)
-                lenght = " " * int((38 - len(text)))
-                text = text = "           {}. {}{}".format(str(i), name, lenght)
-                print(" │{}│".format(text))
-
-
-            print(" │                                      │")
-            print(" │           0. Return                  │")
-            print(" │                                      │")
-            print(" ╰──────────────────────────────────────╯ \n")
+                options[name] = categories_actions.category
+                args[name] = dbs[str(i)]
+            
+            options["Return"] = categories_actions.exit
 
             while True:
-                answer = tui.rinput("{} Select category or return:{} ".format(cyan, reset))
-
-                if answer == "0":
-                    return "Break"
-                if not answer.isnumeric() or answer not in dbs.keys():
-                    continue
-
-                _ = app_functions.show_apps(dbs[answer])
-                if _ == "Break":
-                    return "Break"
+                result = tui.menu(text="Categories:", options=options, args=args)
+                if result:
+                    return result
 
     def exit(self):
         return "Exit"

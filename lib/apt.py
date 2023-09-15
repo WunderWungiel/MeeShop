@@ -6,9 +6,14 @@ from urllib.request import urlopen
 from urllib.parse import urljoin
 from urllib.error import HTTPError, URLError
 import shutil
-from tqdm import tqdm
 from . import dbc
-from .tui import rprint, press_enter, rinput
+from .tui import rprint, press_enter
+try:
+    from tqdm import tqdm
+except ImportError:
+    print(" tqdm not installed.")
+    press_enter()
+    sys.exit(1)
 
 db_creator = dbc.Db_creator()
 ovi_db = db_creator.ovi_db
@@ -16,7 +21,7 @@ categories = db_creator.categories
 full_db = categories["full"]["db"]
 
 folder = "."
-#folder = "/home/user/MyDocs/"
+#folder = "/home/user/MyDocs"
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -75,13 +80,13 @@ def meeshop_update():
     if status == "Error":
         return "Error"
     if status:
-        answer = rinput("{} Update available, wanna update now?{} ".format(cyan, reset))
+        answer = input("{} Update available, wanna update now?{} ".format(cyan, reset))
         if answer.lower() in ["y", "yes"]:
             try:
                 install("meeshop")
             except Exception as e:
                 print(" Error {}{}{}! Report to developer.".format(red, e, reset))
-                rinput("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
+                input("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
                 sys.exit(1)
         else:
             print(" Returning...")
@@ -120,7 +125,7 @@ def download(package):
         return
 
     print()
-    print(" Saved {} in /home/user/MyDocs!\n".format(file))
+    print(" Saved {} in {}!\n".format(file, folder))
 
 def ovi_download(file, link, prompt=True, mydocs=False):
     print(" {}{}WAIT!{}{} Downloading...\n{}".format(red, blink, reset, red, reset))       
@@ -150,7 +155,7 @@ def ovi_download(file, link, prompt=True, mydocs=False):
         if not mydocs:
             print(" Saved {} in /opt/MeeShop/.cache!\n".format(file))
         else:
-            print(" Saved {} in /home/user/MyDocs!\n".format(file))
+            print(" Saved {} in {}!\n".format(file, folder))
 
 def check_update(package):
     try:

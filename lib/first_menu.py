@@ -28,14 +28,8 @@ class Options_Actions:
         while True:
             while True:
                 tui.clean()
-                print(" ╭──────────────────────────────────────╮")
-                print(" │                                      │")
-                print(" │             ╔══════════╗             │")
-                print(" │             ║  Search: ║             │")
-                print(" │             ╚══════════╝             │")
-                print(" │                                      │")
-                print(" ╰──────────────────────────────────────╯ \n")
-                query = tui.rinput("{} Query to search:{} ".format(yellow, reset))
+                tui.frame(text="Search:")
+                query = input("{} Query to search:{} ".format(yellow, reset))
                 if not query:
                     tui.clean()
                     continue
@@ -64,7 +58,7 @@ class Options_Actions:
         else:
             print(" {}Done!\n{}".format(green, reset))
 
-        tui.rinput("{}{} Press Enter to return... {}".format(blink, cyan, reset))
+        input("{}{} Press Enter to return... {}".format(blink, cyan, reset))
         tui.clean()
     def check_for_updates(self):
         status = apt.meeshop_update()

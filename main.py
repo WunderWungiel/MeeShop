@@ -19,7 +19,7 @@ cyan = '\033[1;36m'
 rprint = tui.rprint
 
 def press_enter_to_exit():
-    tui.rinput("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
+    input("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
     sys.exit(1)
 
 def main():

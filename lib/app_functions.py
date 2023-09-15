@@ -30,7 +30,7 @@ class Ovi_App_Options_Actions:
             apt.ovi_install(display_name="{}_armel.deb".format(file), filename="{}_armel.deb".format(file))
         except Exception as e:
             print(" Error {}{}{}! Report to developer.".format(red, e, reset))
-            tui.rinput("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
+            input("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
             sys.exit(1)
     def download(self, *args):
         file, link = args
@@ -47,7 +47,7 @@ class App_Options_Actions:
             apt.install(package)
         except Exception as e:
             print(" Error {}{}{}! Report to developer.".format(red, e, reset))
-            tui.rinput("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
+            input("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
     def download(self, package):
         apt.download(package)
         tui.press_enter()
@@ -60,7 +60,7 @@ class App_Options_Actions:
             apt.uninstall(package)
         except Exception as e:
             print(" Error {}{}{}! Report to developer.".format(red, e, reset))
-            tui.rinput("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
+            input("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
     def exit(self):
         return "Break"
         
@@ -69,14 +69,8 @@ app_options_actions = App_Options_Actions()
 
 def ask_for_search(category):
     tui.clean()
-    print(" ╭──────────────────────────────────────╮")
-    print(" │                                      │")
-    print(" │             ╔══════════╗             │")
-    print(" │             ║  Search: ║             │")
-    print(" │             ╚══════════╝             │")
-    print(" │                                      │")
-    print(" ╰──────────────────────────────────────╯ \n")
-    query = tui.rinput("{} Query to search:{} ".format(yellow, reset))
+    tui.frame(text="Search:")
+    query = input("{} Query to search:{} ".format(yellow, reset))
     if not query:
         return "Break"
     if query == "0":
@@ -226,7 +220,7 @@ def ovi_search(query):
         print(" │  0. Return                           │")
         print(" │                                      │")
         print(" ╰──────────────────────────────────────╯\n")
-        ask = tui.rinput("{} Type numbers, ALL or 0:{} ".format(yellow, reset))
+        ask = input("{} Type numbers, ALL or 0:{} ".format(yellow, reset))
         print()
         
         if not ask.isnumeric():
@@ -301,7 +295,7 @@ def search(query, category="full"):
         print(" │  0. Return                           │")
         print(" │                                      │")
         print(" ╰──────────────────────────────────────╯\n")
-        ask = tui.rinput("{} Type numbers, ALL or 0:{} ".format(yellow, reset))
+        ask = input("{} Type numbers, ALL or 0:{} ".format(yellow, reset))
         print()
         
         if not ask.isnumeric():
@@ -372,7 +366,7 @@ def show_apps(category="full"):
                 print(" │{}{}│".format(text, length))
             
             while True:
-                answer = tui.rinput("{} \nInsert umber to show app,\n 0 to exit:{} ".format(cyan, reset))
+                answer = input("{} \nInsert umber to show app,\n 0 to exit:{} ".format(cyan, reset))
                 print()
 
                 if answer == "0":
@@ -380,7 +374,7 @@ def show_apps(category="full"):
                     break
                 elif answer.lower() == "se":
                     _ = ask_for_search(category)
-                    answer = tui.rinput("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+                    answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
                     if answer.lower() == "y":
                         return "Break"
                     else:
@@ -397,7 +391,7 @@ def show_apps(category="full"):
                         _ = app(db_list[numbers.index(answer)])
                         if _ == "Break":
 
-                            answer = tui.rinput("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+                            answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
                             if answer.lower() == "y":
                                 return "Break"
                             else:
@@ -422,7 +416,7 @@ def show_apps(category="full"):
         proceeded += 10
 
         while True:
-            answer = tui.rinput("{} \nEnter to more, number to show app,\n 0 to exit:{} ".format(cyan, reset))
+            answer = input("{} \nEnter to more, number to show app,\n 0 to exit:{} ".format(cyan, reset))
             print()
 
             if answer == "":
@@ -432,7 +426,7 @@ def show_apps(category="full"):
             
             elif answer.lower() == "se":
                 _ = ask_for_search(category)
-                answer = tui.rinput("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+                answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
                 if answer.lower() == "y":
                     return "Break"
                 else:
@@ -449,7 +443,7 @@ def show_apps(category="full"):
                 while True:
                     _ = app(db_list[numbers.index(answer)])
                     if _ == "Break":
-                        answer = tui.rinput("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+                        answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
                         if answer.lower() == "y":
                             return "Break"
                         else:
@@ -461,14 +455,14 @@ def show_apps(category="full"):
     print(" {}Type number, 0 to return:{}\n".format(cyan, reset))
 
     while True:
-        answer = tui.rinput()
+        answer = input()
 
         if answer == "0":
             return "Break"
 
         elif answer.lower() == "se":
             _ = ask_for_search(category)
-            answer = tui.rinput("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+            answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
             if answer.lower() == "y":
                 return "Break"
             else:
@@ -484,7 +478,7 @@ def show_apps(category="full"):
 
             while True:
                 _ = app(db_list[numbers.index(answer)])
-                answer = tui.rinput("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+                answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
                 if answer.lower() == "y":
                     return "Break"
                 else:
