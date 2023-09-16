@@ -12,7 +12,7 @@ def about():
 
     tui.clean()
 
-    print(" ╭──────────────────────────────────────╮")
+    print(" ┌──────────────────────────────────────┐")
     print(" │                                      │")
     print(" │      MeeShop© 2023 WunderWungiel     │")
     print(" │            Version: 0.3.0            │")
@@ -32,6 +32,6 @@ def about():
     print(" │                                      │")
     print(" │    https://t.me/linuxmobile_world    │")
     print(" │                                      │")
-    print(" ╰──────────────────────────────────────╯ \n")
+    print(" └──────────────────────────────────────┘ \n")
     tui.press_enter()
     tui.clean()

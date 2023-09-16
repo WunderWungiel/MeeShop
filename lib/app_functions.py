@@ -85,12 +85,25 @@ def app(package):
 
     tui.clean()
 
+    process = subprocess.run(["viu", "/home/wunderwungiel/Pobrane/abplayer.png", "-h", "3", "-b"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    icon_list = process.stdout.splitlines()
+
+    icon = ""
+
+    for i, line in enumerate(icon_list):
+        if i == 0:
+            icon += f" │                {line}                │"
+        else:
+            icon += f"\n │                {line}                │"
+    
     display_name = db[package]['display_name']
     if len(display_name) % 2 != 0:
         display_name = display_name + " "
     lenght = " " * int((38 - len(display_name)) / 2)
     
-    custom_text = f""" │{lenght}{display_name}{lenght}│
+    custom_text = f"""{icon}
+ │                                      │
+ │{lenght}{display_name}{lenght}│
  │                                      │"""
     
     if apt.is_installed(package):
@@ -151,7 +164,7 @@ def app(package):
 
     while True:
         tui.clean()
-        result = tui.menu(options=options, args=args, custom_text=custom_text)
+        result = tui.menu(options=options, args=args, custom_text=custom_text, space_left=6)
         if result:
             return result
 
@@ -205,7 +218,7 @@ def ovi_search(query):
 
     while True:
         tui.clean()
-        print(" ╭──────────────────────────────────────╮")
+        print(" ┌──────────────────────────────────────┐")
         print(" │                                      │")
         print(" │         ╔══════════════════╗         │")
         print(" │         ║  Search results: ║         │")
@@ -219,7 +232,7 @@ def ovi_search(query):
         print(" │                                      │")
         print(" │  0. Return                           │")
         print(" │                                      │")
-        print(" ╰──────────────────────────────────────╯\n")
+        print(" └──────────────────────────────────────┘\n")
         ask = input("{} Type numbers, ALL or 0:{} ".format(yellow, reset))
         print()
         
@@ -275,7 +288,7 @@ def search(query, category="full"):
     
     while True:
         tui.clean()
-        print(" ╭──────────────────────────────────────╮")
+        print(" ┌──────────────────────────────────────┐")
         print(" │                                      │")
         print(" │         ╔══════════════════╗         │")
         print(" │         ║  Search results: ║         │")
@@ -283,18 +296,13 @@ def search(query, category="full"):
         print(" │                                      │")
 
         for i, pkg in zip(numbers, results):
-            if apt.is_installed(packages[pkg]):
-                _result = "{}. {} ✓ ".format(i, pkg)
-                lenght = " " * int((38 - 2 - len(_result)))
-                print(" │  {}{}│".format(_result, lenght))
-            else:
-                _result = "{}. {}".format(i, pkg)
-                lenght = " " * int((38 - 2 - len(_result)))
-                print(" │  {}{}│".format(_result, lenght))
+            _result = "{}. {}".format(i, pkg)
+            lenght = " " * int((38 - 2 - len(_result)))
+            print(" │  {}{}│".format(_result, lenght))
         print(" │                                      │")
         print(" │  0. Return                           │")
         print(" │                                      │")
-        print(" ╰──────────────────────────────────────╯\n")
+        print(" └──────────────────────────────────────┘\n")
         ask = input("{} Type numbers, ALL or 0:{} ".format(yellow, reset))
         print()
         
@@ -303,21 +311,17 @@ def search(query, category="full"):
             print(" ")
             continue
 
-        todl = ask.split(" ")
-        todl = list(set(todl))
-        todl = sorted([int(x) for x in todl if x.isdigit()])
-        todl = list(map(str, todl))
+        todl = ask.split(" ")[0]
 
         if not ask:
             continue
         if ask == "0":
             return "Break"
-        if not all(num in numbers for num in todl):
+        if not todl in numbers:
             print(" {}Wrong number, select a correct one!{}".format(red, reset))
             print(" ")
             continue
-        i = todl[0]
-        package = packages[results[numbers.index(i)]]
+        package = packages[results[numbers.index(todl)]]
         while True:
             _ = app(package=package)
             if _ == "Break":
@@ -336,7 +340,7 @@ def show_apps(category="full"):
         db_list.append(pkg)
 
     tui.clean()
-    print(" ╭──────────────────────────────────────╮")
+    print(" ┌──────────────────────────────────────┐")
     print(" │                                      │")
     print(" │         ╔════════════════════╗       │")
     print(" │         ║  List of packages: ║       │")

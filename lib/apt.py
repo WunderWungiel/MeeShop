@@ -99,6 +99,7 @@ def meeshop_update():
 def download(package):
 
     file = full_db[package]['file']
+    filename = os.path.basename(file)
 
     link = urljoin("http://wunderwungiel.pl/MeeGo/openrepos/", file)
     print(" {}{}WAIT!{}{} Downloading...\n{}".format(red, blink, reset, red, reset))      
@@ -107,7 +108,7 @@ def download(package):
         total_size_in_bytes = int(response.headers.get('Content-Length', 0))
         block_size = 1024
         progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
-        f = open(os.path.join(folder, file), "wb")
+        f = open(os.path.join(folder, filename), "wb")
         while True:
             data = response.read(block_size)
             if not data:
@@ -125,7 +126,7 @@ def download(package):
         return
 
     print()
-    print(" Saved {} in {}!\n".format(file, folder))
+    print(" Saved {} in {}!\n".format(filename, folder))
 
 def ovi_download(file, link, prompt=True, mydocs=False):
     print(" {}{}WAIT!{}{} Downloading...\n{}".format(red, blink, reset, red, reset))       

@@ -20,22 +20,33 @@ yellow = '\033[33m'
 def clean():
     subprocess.call("clear")
 
-def rprint(text='', time=0.02, _end="\n\n"):
+def rprint(text='', time=0.02, previous_text='', _end="\n\n"):
     
-    ansi_pattern = r'\x1B\[[0-?]*[ -/]*[@-~]'
-    ansi_sequences = re.split(ansi_pattern, text)
-    ansi_matches = re.findall(ansi_pattern, text)
+    if re.search(r'\x1B\[[0-?]*[ -/]*[@-~]', text):
+        ansi_pattern = r'\x1B\[[0-?]*[ -/]*[@-~]'
+        ansi_sequences = re.split(ansi_pattern, text)
+        ansi_matches = re.findall(ansi_pattern, text)
 
-    for text_part, ansi_seq in zip(ansi_sequences, ansi_matches):
-        for char in text_part:
-            sys.stdout.write(char)
+        for text_part, ansi_seq in zip(ansi_sequences, ansi_matches):
+            for char in text_part:
+                sys.stdout.write(char)
+                sys.stdout.flush()
+                sleep(time)
+
+            sys.stdout.write(ansi_seq)
             sys.stdout.flush()
+
+        print(_end, end='')
+    else:
+        for s in text:
+
+            s = "\r" + previous_text + s
+            sys.stdout.write(s)
+            sys.stdout.flush()
+
+            previous_text = s
             sleep(time)
-
-        sys.stdout.write(ansi_seq)
-        sys.stdout.flush()
-
-    print('', end=_end)
+        print(_end, end='')
 
 def get_key():
     fd = sys.stdin.fileno()
@@ -86,12 +97,13 @@ def menu(options, text=None, args=None, custom_text=None, width=38, space_left=9
 
         clean()
         
-        print(" ╭{}╮".format(width * "─"))
+        print(" ┌{}┐".format(width * "─"))
         print(" │{}│".format(width* " "))
         
         if text:
             lines = text.splitlines()
             lines = [line.strip() for line in lines]
+
             biggest_line = max(lines, key=len)
 
             spaces_count = (width - len(get_raw_string(biggest_line)) - 6) // 2
@@ -135,24 +147,28 @@ def menu(options, text=None, args=None, custom_text=None, width=38, space_left=9
 
             if current_chosen == i:
 
+                raw_name = get_raw_string(name)
+
                 if len(str(i)) % 2 == 0:
-                    if len(name) % 2 != 0:
+                    if len(raw_name) % 2 != 0:
                         name += " "
 
-                spaces = (available - len(name) - len(str(i)))
+                spaces = (available - len(raw_name) - len(str(i)))
                 spaces = " " * spaces
 
                 print(f" │{space_left * ' '}{cyan_background}{i}. {name}{reset}{spaces}│")
             else:
 
+                raw_name = get_raw_string(name)
+
                 if len(str(i)) % 2 == 0:
-                    if len(name) % 2 != 0:
+                    if len(raw_name) % 2 != 0:
                         name += " "
-                spaces = (available - len(name) - len(str(i)))
+                spaces = (available - len(raw_name) - len(str(i)))
                 spaces = " " * spaces
                 print(f" │{space_left * ' '}{i}. {name}{spaces}│")
         print(" │{}│".format(width * " "))
-        print(" ╰{}╯".format(width * "─"))
+        print(" └{}┘".format(width * "─"))
 
         key = get_key()
 
@@ -188,11 +204,11 @@ def menu(options, text=None, args=None, custom_text=None, width=38, space_left=9
         elif key == "home":
             current_chosen = options_integers[0]
 
-def frame(text=None, custom_text=None, width=38, end='\n', second_frame=True, clean_screen=True):
+def frame(text=None, custom_text=None, width=38, end='\n', second_frame=False, clean_screen=True):
     if clean_screen:
         clean()
         
-    print(" ╭{}╮".format(width * "─"))
+    print(" ┌{}┐".format(width * "─"))
     print(" │{}│".format(width* " "))
 
     if text:
@@ -200,6 +216,8 @@ def frame(text=None, custom_text=None, width=38, end='\n', second_frame=True, cl
         lines = [line.strip() for line in lines]
         raw_lines = [get_raw_string(line) for line in lines]
         biggest_line = max(raw_lines, key=len)
+        if len(biggest_line) > 36:
+            biggest_line = "".join(list(biggest_line)[:36])
 
         if second_frame:
         
@@ -245,7 +263,7 @@ def frame(text=None, custom_text=None, width=38, end='\n', second_frame=True, cl
                 print(f" │{spaces}{line}{spaces}│")
 
         print(" │{}│".format(width * " "))
-        print(" ╰{}╯ {}".format(width * "─", end))
+        print(" └{}┘ {}".format(width * "─", end))
     elif custom_text:
         print(custom_text)
 

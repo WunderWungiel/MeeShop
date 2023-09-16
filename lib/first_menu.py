@@ -14,6 +14,7 @@ green = '\033[32m'
 blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
+bold = '\033[1m'
 
 class Options_Actions:
     def __init__(self):
@@ -69,6 +70,26 @@ class Options_Actions:
     def about(self):
         about()
         tui.clean()
+    def donate(self):
+
+        tui.frame(
+            text = f"""{cyan}{bold}Donating{reset}
+            
+If you want to donate for my
+small work, you can do it here:
+
+donationalerts.com/r/WunderWungiel
+
+Thank you for every 
+$, €, £, zł, etc., etc. ♥
+
+This really motivates.""",
+            second_frame=False
+        )
+
+        tui.press_enter()
+        tui.clean()
+
     def exit(self):
         sys.exit(0)
 
@@ -76,7 +97,8 @@ options_actions = Options_Actions()
 
 def first_menu():
 
-    text = "Welcome to MeeShop!"
+    text = '''Welcome to MeeShop
+v0.3.0!'''
 
     options = {
         'Applications': options_actions.second_menu,
@@ -85,6 +107,7 @@ def first_menu():
         'APT Fixer': options_actions.apt_fixer,
         'Update repository': options_actions.update_repository,
         'Check for updates': options_actions.check_for_updates,
+        'Donate': options_actions.donate,
         'About': options_actions.about,
         'Exit': options_actions.exit
     }
