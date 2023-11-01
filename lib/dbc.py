@@ -4,13 +4,7 @@ from xml.etree import ElementTree as ET
 import os
 import hashlib
 
-blue = '\033[96m'
-red = '\033[31m'
-reset = '\033[0m'
-green = '\033[32m'
-blink = '\033[5m'
-yellow = '\033[33m'
-cyan = '\033[1;36m'
+from .small_libs import reset, red
 
 def md5sum(file_path):
     with open(file_path, 'rb') as file:
@@ -22,7 +16,7 @@ def md5sum(file_path):
             md5_hash.update(data)
     return md5_hash.hexdigest()
 
-class Db_creator:
+class DbCreator:
 
     def __init__(self):
 
@@ -85,7 +79,7 @@ class Db_creator:
             if category == "full" or category == "apps":
                 continue
             categories["full"]["db"].update(categories[category]["db"])
-            
+
         self.categories = categories
         self.ovi_db = self.ovi_db_creator()
         if self.error:
@@ -140,3 +134,7 @@ class Db_creator:
             ovi_db = f.readlines()
 
         return ovi_db
+
+db_creator = DbCreator()
+ovi_db = db_creator.ovi_db
+categories = db_creator.categories

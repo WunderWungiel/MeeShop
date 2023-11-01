@@ -1,11 +1,7 @@
 from . import tui
-from . import app_functions
-from .re_decoder import re_decoder
-from . import dbc
-
-db_creator = dbc.Db_creator()
-ovi_db = db_creator.ovi_db
-categories = db_creator.categories
+from .stores.wunder import show_apps, search
+from .small_libs import re_decoder
+from .dbc import categories
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -16,20 +12,20 @@ yellow = '\033[33m'
 cyan = '\033[1;36m'
 
 
-class Categories_Actions:
+class CategoriesActions:
     def __init__(self):
         pass
     def category(self, category):
         while True:
-            _ = app_functions.show_apps(category)
+            _ = show_apps(category)
             if _ == "Break":
                 return
     def exit(self):
         return "Break"
 
-categories_actions = Categories_Actions()
+categories_actions = CategoriesActions()
 
-class Options_Actions:
+class OptionsActions:
     def __init__(self):
         pass
     def search(self):
@@ -44,14 +40,13 @@ class Options_Actions:
                 return "Break"
             else:
                 query = re_decoder(query)
-                app_functions.search(query=query, category="full")
+                search(query=query, category="full")
                 tui.clean()
     def categories(self):
         while True:
             tui.clean()
 
-            options = {}
-            args = {}
+            items = []
 
             dbs = {}
 
@@ -60,33 +55,32 @@ class Options_Actions:
 
                 name = categories[category]["name"]
 
-                options[name] = categories_actions.category
-                args[name] = dbs[str(i)]
+                items.append([name, categories_actions.category, [dbs[str(i)]]])
             
-            options["Return"] = categories_actions.exit
+            items.append(["Return", categories_actions.exit])
 
             while True:
-                result = tui.menu(text="Categories:", options=options, args=args)
+                result = tui.menu(items=items, text="Categories:")
                 if result:
                     return result
 
     def exit(self):
         return "Exit"
 
-options_actions = Options_Actions()
+options_actions = OptionsActions()
 
 def second_menu():
 
     text = "Welcome to MeeShop!"
 
-    options = {
-        'Search': options_actions.search,
-        'Categories': options_actions.categories,
-        'Return': options_actions.exit
-    }
+    items = [
+        ['Search', options_actions.search],
+        ['Categories', options_actions.categories],
+        ['Return', options_actions.exit]
+    ]
 
     while True:
         tui.clean()
-        result = tui.menu(options=options, text=text)
+        result = tui.menu(items, text=text)
         if result == "Exit":
             return "Break"

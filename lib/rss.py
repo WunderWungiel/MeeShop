@@ -3,6 +3,7 @@ from urllib.request import urlopen
 from urllib.error import URLError, HTTPError
 import subprocess
 from xml.etree import ElementTree as ET
+
 from . import tui
 
 blue = '\033[96m'
@@ -13,9 +14,10 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
-class Rss_Options:
+class RSSOptions:
     def __init__(self):
         pass
+
     def feed(self, *args):
 
         countries_names, countries_numbers, countries_files, i = args
@@ -27,26 +29,29 @@ class Rss_Options:
             _ = country_feeds(country, country_file)
             if _ == "Break":
                 break
+
     def exit(self):
         return "Break"
 
-class Country_Feeds_Options:
+class CountryFeedsOptions:
     def __init__(self):
         pass
+
     def feed(self, *args):
 
         links, numbers, i = args        
 
         link = links[numbers.index(i)]
 
-        subprocess.Popen("/usr/bin/invoker --type=m /usr/bin/grob {} > /dev/null 2>&1".format(link), shell=True)
+        subprocess.Popen(["/usr/bin/invoker", "--type=m", "/usr/bin/grob", link], stdout=subprocess.DEVNULL)
         time.sleep(1.5)
         tui.press_enter()()
+
     def exit(self):
         return "Break"
 
-rss_list_options = Rss_Options()
-country_feeds_options = Country_Feeds_Options()
+rss_list_options = RSSOptions()
+country_feeds_options = CountryFeedsOptions()
 
 def rss():
 
@@ -78,17 +83,19 @@ def rss():
 
         text = "RSS feeds:"
 
-        options = {}
-        args = {}
+        items = []
 
         for i, name in zip(countries_numbers, countries_names):
-                options[name] = rss_list_options.feed
-                args[name] = [countries_names, countries_numbers, countries_files, i]
-        options["Return"] = rss_list_options.exit
+                items.append([
+                    name,
+                    rss_list_options.feed,
+                    [countries_names, countries_numbers, countries_files, i]
+                ])
+        items.append(["Return", rss_list_options.exit])
 
         while True:
             tui.clean()
-            result = tui.menu(options=options, text=text, args=args)
+            result = tui.menu(items, text=text)
             if result:
                 return result
 
@@ -123,17 +130,19 @@ def country_feeds(country, country_file):
 
         text = "{} feeds:".format(country)
 
-        options = {}
-        args = {}
+        items = []
 
         for i, name in zip(numbers, names):
-            options[name] = country_feeds_options.feed
-            args[name] = [links, numbers, i]
-
-        options["Return"] = rss_list_options.exit
+            items.append([
+                name,
+                country_feeds_options.feed,
+                [links, numbers, i]
+            ])
+        
+        items.append(["Return", rss_list_options.exit])
 
         while True:
             tui.clean()
-            result = tui.menu(options=options, text=text, args=args)
+            result = tui.menu(items, text=text, space_left=3)
             if result:
                 return result

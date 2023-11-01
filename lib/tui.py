@@ -1,9 +1,10 @@
-import subprocess
 import sys
 from time import sleep
 import tty
 import termios
 import re
+
+from .small_libs import clean
 
 cyan = '\033[38;5;104m'
 cyan_background = '\033[48;5;104m'
@@ -12,13 +13,43 @@ italic = '\033[3m'
 reset = '\033[0m'
 blue = '\033[96m'
 red = '\033[31m'
-reset = '\033[0m'
 green = '\033[32m'
 blink = '\033[5m'
 yellow = '\033[33m'
 
-def clean():
-    subprocess.call("clear")
+def frame_around_text(text, width=38):
+    lines = text.splitlines()
+    lines = [line.strip() for line in lines]
+
+    biggest_line = max(lines, key=len)
+
+    spaces_count = (width - len(get_raw_string(biggest_line)) - 6) // 2
+    spaces = " " * spaces_count
+    gora_count = width - (spaces_count * 2) - 2
+    gora_spacje = "═" * gora_count
+    gora_ramki = f" │{spaces}╔{gora_spacje}╗{spaces}│"
+    output = gora_ramki
+
+    for line in lines:
+
+        raw_line = get_raw_string(line)
+
+        if len(raw_line) % 2 != 0:
+            if list(raw_line)[0].isalpha():
+                line += " "
+            else:
+                line = " " + line
+
+        spacje_w_srodku_count = (width - len(raw_line) - (spaces_count * 2) - 2) // 2
+        spacje_w_srodku = " " * spacje_w_srodku_count
+
+        srodek_ramki = f" │{spaces}║{spacje_w_srodku}{line}{spacje_w_srodku}║{spaces}│"
+        output += "\n" + srodek_ramki
+
+    gora_ramki = f" │{spaces}╚{gora_spacje}╝{spaces}│"
+    output += "\n" + gora_ramki
+    
+    return output
 
 def rprint(text='', time=0.02, previous_text='', _end="\n\n"):
     
@@ -80,25 +111,30 @@ def get_raw_string(string):
     string = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', string)
     return string
 
-def menu(options, text=None, args=None, custom_text=None, width=38, space_left=9):
+def menu(items, text=None, custom_text=None, width=38, space_left=9):
 
-    options_names = list(options.keys())
-    options_actions = list(options.values())
+    options_names = []
+    options_actions = []
     options_integers = []
+    options_args = []
 
-    for i, name in enumerate(options_names, start=1):
+    for i, name in enumerate(items, start=1):
+        options_names.append(name[0])
+        options_actions.append(name[1])
+        if len(name) > 2:
+            options_args.append(name[2])
+        else:
+            options_args.append([])
         options_integers.append(i)
 
     current_chosen = 1
-
-    key = None
 
     while True:
 
         clean()
         
         print(" ┌{}┐".format(width * "─"))
-        print(" │{}│".format(width* " "))
+        print(" │{}│".format(width * " "))
         
         if text:
             lines = text.splitlines()
@@ -185,18 +221,13 @@ def menu(options, text=None, args=None, custom_text=None, width=38, space_left=9
                     continue
                 current_chosen = key
                 user_choose = key
-            if args:
-                user_choose_name = options_names[options_integers.index(user_choose)]
-                if user_choose_name in args.keys():
-                    args_list = args.get(user_choose_name)
-                    if isinstance(args_list, str):
-                        result = options_actions[options_integers.index(user_choose)](args_list)
-                    else:
-                        result = options_actions[options_integers.index(user_choose)](*args_list)
-                else:
-                    result = options_actions[options_integers.index(user_choose)]()
-            else:
+            args = options_args[options_integers.index(user_choose)]
+            if len(args) == 0:
                 result = options_actions[options_integers.index(user_choose)]()
+            elif len(args) == 1:
+                result = options_actions[options_integers.index(user_choose)](args[0])
+            else:
+                result = options_actions[options_integers.index(user_choose)](*args)
             if result:
                 return result
         elif key == "end":

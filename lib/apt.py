@@ -1,35 +1,20 @@
 import subprocess
-import sys
 import os
 import re
 from urllib.request import urlopen
 from urllib.parse import urljoin
 from urllib.error import HTTPError, URLError
-import shutil
-from . import dbc
-from .tui import rprint, press_enter
-try:
-    from tqdm import tqdm
-except ImportError:
-    print(" tqdm not installed.")
-    press_enter()
-    sys.exit(1)
 
-db_creator = dbc.Db_creator()
-ovi_db = db_creator.ovi_db
-categories = db_creator.categories
+from tqdm import tqdm
+
+from .tui import rprint, press_enter
+from .dbc import categories
+from .small_libs import reset, red, green, blink, cyan
+
 full_db = categories["full"]["db"]
 
 folder = "."
 #folder = "/home/user/MyDocs"
-
-blue = '\033[96m'
-red = '\033[31m'
-reset = '\033[0m'
-green = '\033[32m'
-blink = '\033[5m'
-yellow = '\033[33m'
-cyan = '\033[1;36m'
 
 def update():
     try:
@@ -45,12 +30,14 @@ def update():
     if process.returncode != 0:
         return "Error"
     
+# Check if dpkg status area is locked.
 def is_dpkg_locked():
     paths = [
         "/var/lib/dpkg/lock",
         "/var/lib/apt/lists/lock"
     ]
 
+    # We check each file in paths, if it's being used by apt-get or dpkg.
     for path in paths:
 
 
@@ -58,11 +45,14 @@ def is_dpkg_locked():
             continue
 
         try:
+            # The lsof does its job. We also pass LANG=C to make sure it's English.
             process = subprocess.run(["lsof", path], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        # PermissionError is raised if lsof can't be launched because of permissions.
         except PermissionError:
             rprint(f"{red} A problem with file permissions.{reset}")
             press_enter()
             return
+        # While FileNotFoundError is raised if "lsof" doesn't exist at all.
         except FileNotFoundError:
             rprint(f"{red} File not found.{reset}")
             press_enter()
@@ -70,6 +60,7 @@ def is_dpkg_locked():
         
         result = process.stdout
 
+        # Here is the check for dpkg / apt-get in output.
         if "dpkg.real" in result or "apt-get.real" in result:
             return True
     
@@ -87,7 +78,7 @@ def meeshop_update():
             except Exception as e:
                 print(" Error {}{}{}! Report to developer.".format(red, e, reset))
                 input("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
-                sys.exit(1)
+                raise SystemExit(1)
         else:
             print(" Returning...")
             print()
@@ -311,9 +302,7 @@ def add_repo():
 Pin: origin wunderw-openrepos
 Pin-Priority: 1"""
 
-        if os.path.isdir(repo_dir):
-            shutil.rmtree(repo_dir)
-        elif os.path.isfile(repo_dir):
+        if os.path.isfile(repo_dir):
             os.remove(repo_dir)
 
         with open(repo_dir, "w") as f:
@@ -321,7 +310,7 @@ Pin-Priority: 1"""
     
         with open(pref_dir, "w") as f:
             f.write(pref_text)
-    except Exception as e:
+    except:
         return "Error"
 
 def remove_repo():
@@ -330,13 +319,9 @@ def remove_repo():
 
     pref_dir = "/etc/apt/preferences.d/wunderw-openrepos.pref"
 
-    if os.path.isdir(repo_dir):
-        shutil.rmtree(repo_dir)
-    elif os.path.isfile(repo_dir):
+    if os.path.isfile(repo_dir):
         os.remove(repo_dir)
-    if os.path.isdir(pref_dir):
-        shutil.rmtree(pref_dir)
-    elif os.path.isfile(pref_dir):
+    if os.path.isfile(pref_dir):
         os.remove(pref_dir)
 
 def is_repo_enabled():
