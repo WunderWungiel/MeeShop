@@ -1,15 +1,11 @@
 import subprocess
 import os
 import re
-from urllib.request import urlopen
 from urllib.parse import urljoin
-from urllib.error import HTTPError, URLError
 
-from tqdm import tqdm
-
-from .tui import rprint, press_enter
+from .tui import rprint
 from .dbc import categories
-from .small_libs import reset, red, green, blink, cyan
+from .small_libs import reset, red, green, blink, cyan, press_enter, download_file
 
 full_db = categories["full"]["db"]
 
@@ -71,14 +67,14 @@ def meeshop_update():
     if status == "Error":
         return "Error"
     if status:
-        answer = input("{} Update available, wanna update now?{} ".format(cyan, reset))
+        answer = input(f"{cyan} Update available, wanna update now?{reset} ")
         if answer.lower() in ["y", "yes"]:
             try:
                 install("meeshop")
             except Exception as e:
-                print(" Error {}{}{}! Report to developer.".format(red, e, reset))
-                input("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
-                raise SystemExit(1)
+                print(f" Error {red}{e}{reset}! Report to developer.")
+                input(f"{blink}{cyan} Press Enter to exit... {reset}")
+                quit()
         else:
             print(" Returning...")
             print()
@@ -93,61 +89,7 @@ def download(package):
     filename = os.path.basename(file)
 
     link = urljoin("http://wunderwungiel.pl/MeeGo/openrepos/", file)
-    print(" {}{}WAIT!{}{} Downloading...\n{}".format(red, blink, reset, red, reset))      
-    try:
-        response = urlopen(link)
-        total_size_in_bytes = int(response.headers.get('Content-Length', 0))
-        block_size = 1024
-        progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
-        f = open(os.path.join(folder, filename), "wb")
-        while True:
-            data = response.read(block_size)
-            if not data:
-                break
-            progress_bar.update(len(data))
-            f.write(data)
-        
-        f.close()
-
-        progress_bar.close()
-
-    except (HTTPError, URLError):
-        print(" {}Error while downloading content!{}".format(red, reset))
-        press_enter()
-        return
-
-    print()
-    print(" Saved {} in {}!\n".format(filename, folder))
-
-def ovi_download(file, link, prompt=True, mydocs=False):
-    print(" {}{}WAIT!{}{} Downloading...\n{}".format(red, blink, reset, red, reset))       
-    try:
-        response = urlopen(link)
-        total_size_in_bytes = int(response.headers.get('Content-Length', 0))
-        block_size = 1024
-        progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
-        if mydocs:
-            f = open(os.path.join(folder, file), "wb")
-        else:
-            f = open(file, "wb")
-        while True:
-            data = response.read(block_size)
-            if not data:
-                break
-            progress_bar.update(len(data))
-            f.write(data)
-        f.close()
-        progress_bar.close()
-    except (HTTPError, URLError):
-        print(" {}Error while downloading content!{}".format(red, reset))
-        press_enter()
-        return
-    print()
-    if prompt:
-        if not mydocs:
-            print(" Saved {} in /opt/MeeShop/.cache!\n".format(file))
-        else:
-            print(" Saved {} in {}!\n".format(file, folder))
+    download_file(link=link, filename=filename, prompt=True)
 
 def check_update(package):
     try:
@@ -210,7 +152,7 @@ def install(package):
         return
 
     print()
-    print(" {}{} installed!{}".format(green, display_name, reset))
+    print(f" {green}{display_name} installed!{reset}")
     press_enter()
 
 def ovi_install(display_name, filename):
@@ -249,14 +191,13 @@ def ovi_install(display_name, filename):
             return
 
         depends_string = ', '.join(depends)
-        print(" {} depends on following\n dependencies, not installed yet:\n\n {}.".format(display_name, depends_string))
+        print(f" {display_name} depends on following\n dependencies, not installed yet:\n\n {depends_string}.")
         print()
         print(" Install them manually.")
      
     print()
-    print(" {}{} installed!{}".format(green, display_name, reset))
+    print(f" {green}{display_name} installed!{reset}")
     press_enter()
-
 
 def uninstall(package):
     try:

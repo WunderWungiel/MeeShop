@@ -2,25 +2,23 @@ import re
 
 from .. import tui
 from .. import apt
-from ..small_libs import quit, red, reset, cyan, blink, yellow
+from ..small_libs import quit, red, reset, cyan, blink, yellow, download_file, press_enter
 from ..dbc import ovi_db
 
 class OviAppOptionsActions:
     def __init__(self):
         pass
-    def download_install(self, *args):
-        file, link = args
-        apt.ovi_download(file="{}_armel.deb".format(file), link=link, prompt=False)
+    def download_install(self, file, link):
+        download_file(file=f"{file}_armel.deb", link=link, prompt=False)
         try:
-            apt.ovi_install(display_name="{}_armel.deb".format(file), filename="{}_armel.deb".format(file))
+            apt.ovi_install(display_name=f"{file}_armel.deb", filename=f"{file}_armel.deb")
         except Exception as e:
-            print(" Error {}{}{}! Report to developer.".format(red, e, reset))
-            input("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
+            print(f" Error {red}{e}{reset}! Report to developer.")
+            input(f"{blink}{cyan} Press Enter to exit... {reset}")
             quit(1)
-    def download(self, *args):
-        file, link = args
-        apt.ovi_download(file="{}_armel.deb".format(file), link=link, prompt=True, mydocs=True)
-        tui.press_enter()
+    def download(self, file, link):
+        download_file(filename=f"{file}_armel.deb", link=link, prompt=True, folder="/home/user/MyDocs")
+        press_enter()
     def exit(self):
         return "Break"
         
@@ -29,22 +27,19 @@ ovi_app_options_actions = OviAppOptionsActions()
 def ovi_app(file, link):
     tui.clean()
 
-    options = {
-        'Download & install': ovi_app_options_actions.download_install,
-        'Download': ovi_app_options_actions.download,
-        'Return': ovi_app_options_actions.exit
-    }
+    menu = tui.Menu()
 
-    args = {
-        'Download & install': [file, link],
-        'Download': [file, link]
-    }
-
-    text = file.replace(".deb", '')
+    menu.text = file.replace(".deb", '')
+    menu.items = [
+        ['Download & install', ovi_app_options_actions.download_install, [file, link]],
+        ['Download', ovi_app_options_actions.download, [file, link]],
+        '',
+        ['Return', ovi_app_options_actions.exit]
+    ]
 
     while True:
         tui.clean()
-        result = tui.menu(options=options, text=text, args=args)
+        result = menu.run()
         if result:
             return result
 
@@ -56,7 +51,7 @@ def ovi_search(query):
     results = []
 
     for line in ovi_db:
-        file = re.search("(?i)\d+\/(.*{}.*)\?".format(query), line)
+        file = re.search(f"(?i)\d+\/(.*{query}.*)\?", line)
         if file:
             file = file.group(1)
             file = file.replace("_armel.deb", "")
@@ -66,8 +61,8 @@ def ovi_search(query):
         numbers.append(str(i))
 
     if len(results) == 0:
-        print(" {}No apps found!{}".format(red, reset))
-        tui.press_enter()
+        print(f" {red}No apps found!{reset}")
+        press_enter()
         return "Break"
 
     tui.clean()
@@ -84,18 +79,18 @@ def ovi_search(query):
         print(" │                                      │")
         for i, pkg in zip(numbers, results):
             pkg = re.sub("\_\d+.+", "", pkg)
-            _result = "{}. {}".format(i, pkg)
+            _result = f"{i}. {pkg}"
             lenght = " " * int((38 - 2 - len(_result)))
-            print(" │  {}{}│".format(_result, lenght))
+            print(f" │  {_result}{lenght}│")
         print(" │                                      │")
         print(" │  0. Return                           │")
         print(" │                                      │")
         print(" └──────────────────────────────────────┘\n")
-        ask = input("{} Type numbers, ALL or 0:{} ".format(yellow, reset))
+        ask = input(f"{yellow} Type numbers, ALL or 0:{reset} ")
         print()
         
         if not ask.isnumeric():
-            print(" {}Wrong number, select a correct one!{}".format(red, reset))
+            print(f" {red}Wrong number, select a correct one!{reset}")
             print(" ")
             continue
 
@@ -109,7 +104,7 @@ def ovi_search(query):
         if ask == "0":
             return
         if not all(num in numbers for num in todl):
-            print(" {}Wrong number, select a correct one!{}".format(red, reset))
+            print(f" {red}Wrong number, select a correct one!{reset}")
             print(" ")
             continue
         i = todl[0]

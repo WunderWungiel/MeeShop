@@ -1,9 +1,8 @@
 import subprocess
 import time
-import re
 from urllib.parse import quote
 
-from ..small_libs import red, reset, blink, cyan, yellow, re_decoder
+from ..small_libs import red, reset, blink, cyan, yellow, re_decoder, press_enter
 from .. import apt
 from .. import tui
 from ..dbc import categories
@@ -20,17 +19,17 @@ class AppOptionsActions:
             input(f"{blink}{cyan} Press Enter to exit... {reset}")
     def download(self, package):
         apt.download(package)
-        tui.press_enter()
+        press_enter()
     def open_with_browser(self, link):
-        subprocess.Popen(f"/usr/bin/invoker --type=m /usr/bin/grob {link} > /dev/null 2>&1", shell=True)
+        subprocess.Popen(["/usr/bin/invoker", "--type=m", "/usr/bin/grob", link], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(1.5)
-        tui.press_enter()
+        press_enter()
     def uninstall(self, package):
         try:
             apt.uninstall(package)
         except Exception as e:
-            print(" Error {}{}{}! Report to developer.".format(red, e, reset))
-            input("{}{} Press Enter to exit... {}".format(blink, cyan, reset))
+            print(f" Error {red}{e}{reset}! Report to developer.")
+            input(f"{blink}{cyan} Press Enter to exit... {reset}")
     def exit(self):
         return "Break"
     
@@ -39,7 +38,7 @@ app_options_actions = AppOptionsActions()
 def ask_for_search(category):
     tui.clean()
     tui.frame(text="Search:")
-    query = input("{} Query to search:{} ".format(yellow, reset))
+    query = input(f"{yellow} Query to search:{reset} ")
     if not query:
         return "Break"
     if query == "0":
@@ -57,14 +56,14 @@ def search(query, category="full"):
     packages = {}
 
     for pkg, dict in our_db.items():
-        if re.search("(?i){}".format(query), dict['display_name']):
-            results.append(re.search("(.+)", dict['display_name']).group(0))
+        if query.lower() in dict['display_name'].lower():
+            results.append(dict['display_name'])
     for i, result in enumerate(results, start=1):
         numbers.append(str(i))
 
     if len(results) == 0:
-        print(" {}No apps found!{}".format(red, reset))
-        tui.press_enter()
+        print(f" {red}No apps found!{reset}")
+        press_enter()
         return "Break"
 
     for result in results:
@@ -82,18 +81,18 @@ def search(query, category="full"):
         print(" │                                      │")
 
         for i, pkg in zip(numbers, results):
-            _result = "{}. {}".format(i, pkg)
+            _result = f"{i}. {pkg}"
             lenght = " " * int((38 - 2 - len(_result)))
-            print(" │  {}{}│".format(_result, lenght))
+            print(f" │  {_result}{lenght}│")
         print(" │                                      │")
         print(" │  0. Return                           │")
         print(" │                                      │")
         print(" └──────────────────────────────────────┘\n")
-        ask = input("{} Type numbers, ALL or 0:{} ".format(yellow, reset))
+        ask = input(f"{yellow} Type numbers, ALL or 0:{reset} ")
         print()
         
         if not ask.isnumeric():
-            print(" {}Wrong number, select a correct one!{}".format(red, reset))
+            print(f" {red}Wrong number, select a correct one!{reset}")
             print(" ")
             continue
 
@@ -104,7 +103,7 @@ def search(query, category="full"):
         if ask == "0":
             return "Break"
         if not todl in numbers:
-            print(" {}Wrong number, select a correct one!{}".format(red, reset))
+            print(f" {red}Wrong number, select a correct one!{reset}")
             print(" ")
             continue
         package = packages[results[numbers.index(todl)]]
@@ -143,63 +142,54 @@ def app(package):
     
     if apt.is_installed(package):
         lenght = " " * int((38 - 13 - len(package)))
-        custom_text += "\n │  Package: {} ✓{}│".format(package, lenght)
+        custom_text += f"\n │  Package: {package} ✓{lenght}│"
     else:
         lenght = " " * int((38 - 11 - len(package)))
-        custom_text += "\n │  Package: {}{}│".format(package, lenght)
+        custom_text += f"\n │  Package: {package}{lenght}│"
 
     size = db[package]['size']
 
     lenght = " " * int((38 - 8 - len(size)))
-    custom_text += "\n │  Size: {}{}│".format(size, lenght)
+    custom_text += f"\n │  Size: {size}{lenght}│"
 
     version = db[package]['version']
 
     lenght = " " * int((38 - 11 - len(version)))
-    custom_text += "\n │  Version: {}{}│".format(version, lenght)
+    custom_text += f"\n │  Version: {version}{lenght}│"
 
     developer = db[package]['developer']
 
     lenght = " " * int((38 - 14 - len(developer)))
-    custom_text += """
- │  Maintainer: {}{}│
- │                                      │""".format(developer, lenght)
+    custom_text += f"""
+ │  Maintainer: {developer}{lenght}│
+ │                                      │"""
 
     link = "MeeGo/openrepos/" + db[package]['file']
     link = quote(link)
     link = "http://wunderwungiel.pl/" + link
 
     if apt.is_installed(package):
-        options = {
-            'Uninstall': app_options_actions.uninstall,
-            'Download': app_options_actions.download,
-            'Download with browser': app_options_actions.open_with_browser,
-            'Return': app_options_actions.exit
-        }
-
-        args = {
-            'Uninstall': [package],
-            'Download': [package],
-            'Open with browser': [link]
-        }
+        items = [
+            ['Uninstall', app_options_actions.uninstall, package],
+            ['Download', app_options_actions.download, package],
+            ['Download with browser', app_options_actions.open_with_browser, link],
+            ['Return', app_options_actions.exit]
+        ]
 
     else:
-        options = {
-            'Download & install': app_options_actions.download_install,
-            'Download': app_options_actions.download,
-            'Download with browser': app_options_actions.open_with_browser,
-            'Return': app_options_actions.exit
-        }
 
-        args = {
-            'Download & install': [package],
-            'Download': [package],
-            'Open with browser': [link]
-        }
+        items = [
+            ['Download & install', app_options_actions.download_install, package],
+            ['Download', app_options_actions.download, package],
+            ['Download with browser', app_options_actions.open_with_browser, link],
+            ['Return', app_options_actions.exit]
+        ]
+
+    menu = tui.Menu(items=items, custom_text=custom_text, space_left=6)
 
     while True:
         tui.clean()
-        result = tui.menu(options=options, args=args, custom_text=custom_text, space_left=6)
+        result = menu.run()
         if result:
             return result
 
@@ -238,14 +228,14 @@ def show_apps(category="full"):
                 pkg = db_list[i]
                 number = numbers[i]
                 pkg_name = our_db[pkg]['display_name']
-                text = " {}. {}".format(number, pkg_name)
+                text = f" {number}. {pkg_name}"
                 if len(text) % 2 != 0:
                     text += " "
                 length = " " * int(38 - len(text))
-                print(" │{}{}│".format(text, length))
+                print(f" │{text}{length}│")
             
             while True:
-                answer = input("{} \nInsert umber to show app,\n 0 to exit:{} ".format(cyan, reset))
+                answer = input(f"{cyan} \nInsert umber to show app,\n 0 to exit:{reset} ")
                 print()
 
                 if answer == "0":
@@ -253,24 +243,24 @@ def show_apps(category="full"):
                     break
                 elif answer.lower() == "se":
                     _ = ask_for_search(category)
-                    answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+                    answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
                     if answer.lower() == "y":
                         return "Break"
                     else:
                         break
                 else:
                     if not answer.isnumeric():
-                        print(" {}Answer should be number or Enter{}".format(red, reset))
+                        print(f" {red}Answer should be number or Enter{reset}")
                         continue
                     if answer not in numbers:
-                        print(" Wrong number".format(red, reset))
+                        print(f" {red}Wrong number!{reset}")
                         continue
 
                     while True:
                         _ = app(db_list[numbers.index(answer)])
                         if _ == "Break":
 
-                            answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+                            answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
                             if answer.lower() == "y":
                                 return "Break"
                             else:
@@ -285,17 +275,17 @@ def show_apps(category="full"):
             number = numbers[i]
             pkg_name = our_db[pkg]['display_name']
             
-            text = " {}. {}".format(number, pkg_name)
+            text = f" {number}. {pkg_name}"
             if len(text) % 2 != 0:
                 text += " "
             length = " " * int(38 - len(text))
-            print(" │{}{}│".format(text, length))
+            print(f" │{text}{length}│")
         rang_first += 10
         rang_last += 10
         proceeded += 10
 
         while True:
-            answer = input("{} \nEnter to more, number to show app,\n 0 to exit:{} ".format(cyan, reset))
+            answer = input(f"{cyan} \nEnter to more, number to show app,\n 0 to exit:{reset} ")
             print()
 
             if answer == "":
@@ -305,7 +295,7 @@ def show_apps(category="full"):
             
             elif answer.lower() == "se":
                 _ = ask_for_search(category)
-                answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+                answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
                 if answer.lower() == "y":
                     return "Break"
                 else:
@@ -313,16 +303,16 @@ def show_apps(category="full"):
 
             else:
                 if not answer.isnumeric():
-                    print(" {}Answer should be number or Enter{}".format(red, reset))
+                    print(f" {red}Answer should be number or Enter{reset}")
                     continue
                 if answer not in numbers:
-                    print(" {}Wrong number{}".format(red,reset))
+                    print(f" {red}Wrong number{reset}")
                     continue
 
                 while True:
                     _ = app(db_list[numbers.index(answer)])
                     if _ == "Break":
-                        answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+                        answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
                         if answer.lower() == "y":
                             return "Break"
                         else:
@@ -331,7 +321,7 @@ def show_apps(category="full"):
             _break = None
             break
 
-    print(" {}Type number, 0 to return:{}\n".format(cyan, reset))
+    print(f" {cyan}Type number, 0 to return:{reset}\n")
 
     while True:
         answer = input()
@@ -341,7 +331,7 @@ def show_apps(category="full"):
 
         elif answer.lower() == "se":
             _ = ask_for_search(category)
-            answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+            answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
             if answer.lower() == "y":
                 return "Break"
             else:
@@ -349,15 +339,15 @@ def show_apps(category="full"):
 
         else:
             if not answer.isnumeric():
-                print(" {}Answer should be number{}".format(red, reset))
+                print(f" {red}Answer should be number{reset}")
                 continue
             if answer not in numbers:
-                print(" {}Wrong number{}".format(red, reset))
+                print(f" {red}Wrong number{reset}")
                 continue
 
             while True:
                 _ = app(db_list[numbers.index(answer)])
-                answer = input("{} Return to menu (y / Enter)?{} ".format(cyan, reset))
+                answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
                 if answer.lower() == "y":
                     return "Break"
                 else:

@@ -1,6 +1,6 @@
 from . import tui
 from .stores.wunder import show_apps, search
-from .small_libs import re_decoder
+from .small_libs import re_decoder, quit
 from .dbc import categories
 
 blue = '\033[96m'
@@ -31,8 +31,8 @@ class OptionsActions:
     def search(self):
         while True:
             tui.clean()
-            tui.frame(text="Search:")
-            query = input("{} Query to search:{} ".format(yellow, reset))
+            tui.frame(text="Search:", second_frame=True)
+            query = input(f"{yellow} Query to search:{reset} ")
             if not query:
                 tui.clean()
                 continue
@@ -46,7 +46,7 @@ class OptionsActions:
         while True:
             tui.clean()
 
-            items = []
+            menu = tui.Menu(text="Categories:")
 
             dbs = {}
 
@@ -55,12 +55,12 @@ class OptionsActions:
 
                 name = categories[category]["name"]
 
-                items.append([name, categories_actions.category, [dbs[str(i)]]])
+                menu.items.append([name, categories_actions.category, category])
             
-            items.append(["Return", categories_actions.exit])
+            menu.items += ['', ["Return", categories_actions.exit]]
 
             while True:
-                result = tui.menu(items=items, text="Categories:")
+                result = menu.run()
                 if result:
                     return result
 
@@ -69,18 +69,21 @@ class OptionsActions:
 
 options_actions = OptionsActions()
 
-def second_menu():
+def menu():
 
-    text = "Welcome to MeeShop!"
+    menu = tui.Menu()
 
-    items = [
-        ['Search', options_actions.search],
+    menu.text = "Welcome to MeeShop!"
+
+    menu.items = [
+        ['Search', options_actions.search], 
         ['Categories', options_actions.categories],
+        '',
         ['Return', options_actions.exit]
     ]
 
     while True:
         tui.clean()
-        result = tui.menu(items, text=text)
+        result = menu.run()
         if result == "Exit":
             return "Break"

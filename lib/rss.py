@@ -5,6 +5,7 @@ import subprocess
 from xml.etree import ElementTree as ET
 
 from . import tui
+from .small_libs import press_enter
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -18,9 +19,7 @@ class RSSOptions:
     def __init__(self):
         pass
 
-    def feed(self, *args):
-
-        countries_names, countries_numbers, countries_files, i = args
+    def feed(self, countries_names, countries_numbers, countries_files, i):
 
         country = countries_names[countries_numbers.index(i)]
         country_file = countries_files[countries_numbers.index(i)]
@@ -37,15 +36,13 @@ class CountryFeedsOptions:
     def __init__(self):
         pass
 
-    def feed(self, *args):
-
-        links, numbers, i = args        
+    def feed(self, links, numbers, i):
 
         link = links[numbers.index(i)]
 
         subprocess.Popen(["/usr/bin/invoker", "--type=m", "/usr/bin/grob", link], stdout=subprocess.DEVNULL)
         time.sleep(1.5)
-        tui.press_enter()()
+        press_enter()
 
     def exit(self):
         return "Break"
@@ -62,8 +59,8 @@ def rss():
     try:
         r = urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/countries.xml")
     except (URLError, HTTPError):
-        print(" {}Error while downloading content!{}".format(red, reset))
-        tui.press_enter()()
+        print(f" {red}Error while downloading content!{reset}")
+        press_enter()
         return
     root_string = r.read().decode("utf-8")
 
@@ -81,31 +78,30 @@ def rss():
     while True:
         tui.clean()
 
-        text = "RSS feeds:"
-
-        items = []
+        menu = tui.Menu()
+        menu.text = "RSS feeds:"
 
         for i, name in zip(countries_numbers, countries_names):
-                items.append([
+                menu.items.append([
                     name,
                     rss_list_options.feed,
                     [countries_names, countries_numbers, countries_files, i]
                 ])
-        items.append(["Return", rss_list_options.exit])
+        menu.items += ['', ["Return", rss_list_options.exit]]
 
         while True:
             tui.clean()
-            result = tui.menu(items, text=text)
+            result = menu.run()
             if result:
                 return result
 
 def country_feeds(country, country_file):
 
     try:
-        r = urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/{}".format(country_file))
+        r = urlopen(f"http://wunderwungiel.pl/MeeGo/.database/.rss/{country_file}")
     except (URLError, HTTPError):
-        print(" {}Error while downloading content!{}".format(red, reset))
-        tui.press_enter()()
+        print(f" {red}Error while downloading content!{reset}")
+        press_enter()
         return "Break"
     
     root_string = r.read().decode("utf-8")
@@ -128,21 +124,20 @@ def country_feeds(country, country_file):
 
         tui.clean()
 
-        text = "{} feeds:".format(country)
-
-        items = []
-
+        menu = tui.Menu(space_left=3)
+        menu.text = f"{country} feeds:"
+    
         for i, name in zip(numbers, names):
-            items.append([
+            menu.items.append([
                 name,
                 country_feeds_options.feed,
                 [links, numbers, i]
             ])
         
-        items.append(["Return", rss_list_options.exit])
+        menu.items += ['', ["Return", rss_list_options.exit]]
 
         while True:
             tui.clean()
-            result = tui.menu(items, text=text, space_left=3)
+            result = menu.run()
             if result:
                 return result

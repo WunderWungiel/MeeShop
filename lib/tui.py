@@ -1,11 +1,11 @@
 import sys
 from time import sleep
-import tty
-import termios
 import re
 
+from ._tui import _menu, get_raw_string
 from .small_libs import clean
 
+# Defining some colors.
 cyan = '\033[38;5;104m'
 cyan_background = '\033[48;5;104m'
 bold = '\033[1m'
@@ -17,18 +17,29 @@ green = '\033[32m'
 blink = '\033[5m'
 yellow = '\033[33m'
 
+# A function which will return a multi-line string, containing text with frame around.
 def frame_around_text(text, width=38):
+    # This creates list from string and stips each line, to ensure there are not any whitespaces.
     lines = text.splitlines()
     lines = [line.strip() for line in lines]
 
+    # We take biggest line by its lenght.
     biggest_line = max(lines, key=len)
 
+    # Counting the spaces number on left and right.
+    # First, we do a mathematical operation:
+    # (width - raw content lenght of biggest line - 6), and we divide the result by 2
+    # width means the available space between │ and │
+    # 6 is the space inside and with double frame around text (║__text__║), where _ is space.
     spaces_count = (width - len(get_raw_string(biggest_line)) - 6) // 2
     spaces = " " * spaces_count
-    gora_count = width - (spaces_count * 2) - 2
-    gora_spacje = "═" * gora_count
-    gora_ramki = f" │{spaces}╔{gora_spacje}╗{spaces}│"
-    output = gora_ramki
+    # This counts number of top of frame, i.e. ═ characters.
+    # width - total spaces count - 2
+    # 2 means ╔ + ╗ here.
+    top_count = width - (spaces_count * 2) - 2
+    top_spaces = "═" * top_count
+    top_frame = f" │{spaces}╔{top_spaces}╗{spaces}│"
+    output = top_frame
 
     for line in lines:
 
@@ -40,14 +51,14 @@ def frame_around_text(text, width=38):
             else:
                 line = " " + line
 
-        spacje_w_srodku_count = (width - len(raw_line) - (spaces_count * 2) - 2) // 2
-        spacje_w_srodku = " " * spacje_w_srodku_count
+        spaces_inside_count = (width - len(raw_line) - (spaces_count * 2) - 2) // 2
+        spaces_inside = " " * spaces_inside_count
 
-        srodek_ramki = f" │{spaces}║{spacje_w_srodku}{line}{spacje_w_srodku}║{spaces}│"
-        output += "\n" + srodek_ramki
+        middle_frame = f" │{spaces}║{spaces_inside}{line}{spaces_inside}║{spaces}│"
+        output += "\n" + middle_frame
 
-    gora_ramki = f" │{spaces}╚{gora_spacje}╝{spaces}│"
-    output += "\n" + gora_ramki
+    bottom_frame = f" │{spaces}╚{top_spaces}╝{spaces}│"
+    output += "\n" + bottom_frame
     
     return output
 
@@ -79,161 +90,19 @@ def rprint(text='', time=0.02, previous_text='', _end="\n\n"):
             sleep(time)
         print(_end, end='')
 
-def get_key():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    
-    while True:
-        try:
-            tty.setraw(fd)
-            ch = sys.stdin.read(1)
-        
-            if ch == '\x1b':
-                ch2 = sys.stdin.read(2)
-                if ch2 == "[A":
-                    return "up"
-                elif ch2 == '[B':
-                    return "down"
-                elif ch2 == '[F':
-                    return "end"
-                elif ch2 == '[H':
-                    return "home"
-            elif ch == "\x03":
-                raise KeyboardInterrupt
-            elif ch == "\r":
-                return "enter"
-            elif ch.isnumeric():
-                return ch
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
-def get_raw_string(string):
-    string = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', string)
-    return string
-
-def menu(items, text=None, custom_text=None, width=38, space_left=9):
-
-    options_names = []
-    options_actions = []
-    options_integers = []
-    options_args = []
-
-    for i, name in enumerate(items, start=1):
-        options_names.append(name[0])
-        options_actions.append(name[1])
-        if len(name) > 2:
-            options_args.append(name[2])
-        else:
-            options_args.append([])
-        options_integers.append(i)
-
-    current_chosen = 1
-
-    while True:
-
-        clean()
-        
-        print(" ┌{}┐".format(width * "─"))
-        print(" │{}│".format(width * " "))
-        
-        if text:
-            lines = text.splitlines()
-            lines = [line.strip() for line in lines]
-
-            biggest_line = max(lines, key=len)
-
-            spaces_count = (width - len(get_raw_string(biggest_line)) - 6) // 2
-            spaces = " " * spaces_count
-            gora_count = width - (spaces_count * 2) - 2
-            gora_spacje = "═" * gora_count
-            gora_ramki = f" │{spaces}╔{gora_spacje}╗{spaces}│"
-            print(gora_ramki)
-
-            for line in lines:
-
-                raw_line = get_raw_string(line)
-
-                if len(raw_line) % 2 != 0:
-                    if list(raw_line)[0].isalpha():
-                        line += " "
-                    else:
-                        line = " " + line
-
-                spacje_w_srodku_count = (width - len(raw_line) - (spaces_count * 2) - 2) // 2
-                spacje_w_srodku = " " * spacje_w_srodku_count
-
-                srodek_ramki = f" │{spaces}║{spacje_w_srodku}{line}{spacje_w_srodku}║{spaces}│"
-                print(srodek_ramki)
-
-            gora_ramki = f" │{spaces}╚{gora_spacje}╝{spaces}│"
-            print(gora_ramki)        
-
-            print(" │{}│".format(width * " "))
-        elif custom_text:
-            print(custom_text)
-
-        for i, name in zip(options_integers, options_names):
-
-            if current_chosen < 1:
-                current_chosen = options_integers[-1]
-            elif current_chosen > options_integers[-1]:
-                current_chosen = 1
-
-            available = width - 2 - space_left
-
-            if current_chosen == i:
-
-                raw_name = get_raw_string(name)
-
-                if len(str(i)) % 2 == 0:
-                    if len(raw_name) % 2 != 0:
-                        name += " "
-
-                spaces = (available - len(raw_name) - len(str(i)))
-                spaces = " " * spaces
-
-                print(f" │{space_left * ' '}{cyan_background}{i}. {name}{reset}{spaces}│")
-            else:
-
-                raw_name = get_raw_string(name)
-
-                if len(str(i)) % 2 == 0:
-                    if len(raw_name) % 2 != 0:
-                        name += " "
-                spaces = (available - len(raw_name) - len(str(i)))
-                spaces = " " * spaces
-                print(f" │{space_left * ' '}{i}. {name}{spaces}│")
-        print(" │{}│".format(width * " "))
-        print(" └{}┘".format(width * "─"))
-
-        key = get_key()
-
-        if key == "down":
-            current_chosen += 1
-        elif key == "up":
-            current_chosen -= 1
-        elif key.isnumeric() or key == "enter":
-            if key == "enter":
-                user_choose = current_chosen
-            elif key.isnumeric():
-                key = int(key)
-                if key not in options_integers:
-                    continue
-                current_chosen = key
-                user_choose = key
-            args = options_args[options_integers.index(user_choose)]
-            if len(args) == 0:
-                result = options_actions[options_integers.index(user_choose)]()
-            elif len(args) == 1:
-                result = options_actions[options_integers.index(user_choose)](args[0])
-            else:
-                result = options_actions[options_integers.index(user_choose)](*args)
-            if result:
-                return result
-        elif key == "end":
-            current_chosen = options_integers[-1]
-        elif key == "home":
-            current_chosen = options_integers[0]
+class Menu:
+    def __init__(self, items=None, text=None, custom_text=None, width=38, space_left=9):
+        if not items:
+            items = []
+        self.items = items
+        self.text = text
+        self.custom_text = custom_text
+        self.width = width
+        self.space_left = space_left
+    def run(self):
+        result = _menu(self.items, self.text, self.custom_text, self.width, self.space_left)
+        if result:
+            return result
 
 def frame(text=None, custom_text=None, width=38, end='\n', second_frame=False, clean_screen=True):
     if clean_screen:
@@ -297,6 +166,3 @@ def frame(text=None, custom_text=None, width=38, end='\n', second_frame=False, c
         print(" └{}┘ {}".format(width * "─", end))
     elif custom_text:
         print(custom_text)
-
-def press_enter():
-    input("{}{} Press Enter to continue... {}".format(blink, cyan, reset))

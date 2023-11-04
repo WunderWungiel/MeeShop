@@ -36,7 +36,7 @@ def main():
         print(f"{red} Error while setting workspace...(error: {e}{reset}\n")
         press_enter_to_exit()
     else:
-        print("{} Done!{}\n".format(green, reset))
+        print(f"{green} Done!{reset}\n")
 
     print(" Testing internet connection...\n")
     result = subprocess.call(["ping", "gnu.org", "-c", "1"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
@@ -52,13 +52,12 @@ def main():
 
     # /usr/bin/aegis-apt-get should not exist if Aegis-hack not installed.
     if not os.path.isfile("/usr/bin/aegis-apt-get"):
-        print("{red} Aegis-install hack by CODeRUS needs to be installed.{reset}")
+        print(f"{red} Aegis-install hack by CODeRUS needs to be installed.{reset}")
         print(" Get it here:")
         print(" http://wunderwungiel.pl/MeeGo/apt-repo/pool/main/hack-installer_1.0.10_armel.deb")
         press_enter_to_exit()
-
     else:
-        rprint("{} Done!{}".format(green, reset))
+        rprint(f"{green} Done!{reset}")
 
     # Here we run the first menu in loop, and clean the screen after each execution.
     while True:

@@ -25,7 +25,7 @@ class DbCreator:
         try:
             r = urlopen("http://wunderwungiel.pl/MeeGo/openrepos/categories.xml")
         except (URLError, HTTPError):
-            print(" {}Error downloading categories list...\n{}".format(red, reset))
+            print(f" {red}Error downloading categories list...\n{reset}")
             self.error = True
             return
 
@@ -40,7 +40,7 @@ class DbCreator:
             id = category.get('id')
             file = category.get('file')
 
-            md5_file = "{}.sum".format(id)
+            md5_file = f"{id}.sum"
 
             categories[id] = {
                 "file": file
@@ -48,9 +48,9 @@ class DbCreator:
 
             if os.path.isfile(file):
                 try:
-                    r = urlopen("http://wunderwungiel.pl/MeeGo/openrepos/md5/{}".format(md5_file))
+                    r = urlopen(f"http://wunderwungiel.pl/MeeGo/openrepos/md5/{md5_file}")
                 except (URLError, HTTPError):
-                    print(" {}Error downloading MD5 sums...\n{}".format(red, reset))
+                    print(f" {red}Error downloading MD5 sums...\n{reset}")
                     self.error = True
                     return
 
@@ -89,9 +89,9 @@ class DbCreator:
         
         if download:
             try:
-                r = urlopen("http://wunderwungiel.pl/MeeGo/openrepos/{}".format(file))
+                r = urlopen(f"http://wunderwungiel.pl/MeeGo/openrepos/{file}")
             except (URLError, HTTPError):
-                print(" {}Error downloading {}...\n{}".format(red, file, reset))
+                print(f" {red}Error downloading {file}...\n{reset}")
                 self.error = True
                 return
             with open(file, "w") as f:
@@ -125,7 +125,7 @@ class DbCreator:
         try:
             r = urlopen("http://wunderwungiel.pl/MeeGo/.database/Ovi.txt")
         except (HTTPError, URLError):
-            print(" {}Error downloading Ovi database...\n{}".format(red, reset))
+            print(f" {red}Error downloading Ovi database...\n{reset}")
             self.error = True
             return
         with open("Ovi.txt", "w") as f:

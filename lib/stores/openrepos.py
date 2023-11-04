@@ -2,7 +2,7 @@ import re
 
 from .. import tui
 from .. import api
-from ..small_libs import red, reset, yellow
+from ..small_libs import red, reset, yellow, press_enter
 
 class ORAppOptionsActions:
     def __init__(self):
@@ -21,14 +21,16 @@ class ORAppOptionsActions:
 
         files_options_actions = FilesOptionsActions()
 
-        options = {}
-        args = {}
+        menu = tui.Menu(text="Files", space_left=5)
+
         for file, link in files.items():
-            options[file] = files_options_actions.get_file
-            args[file] = link
-        options["Return"] = files_options_actions.exit
+            menu.items.append([
+                file, files_options_actions.get_file, link
+            ])
+        menu.items += ['', ["Return", files_options_actions.exit]]
+
         while True:
-            _ = tui.menu(options=options, text="Files", args=args, space_left=5)
+            _ = menu.run()
             if _ == "Break":
                 break
 
@@ -65,32 +67,30 @@ def or_app(link):
     maintainer = app_info.author
 
     lenght = " " * int((38 - 14 - len(maintainer)))
-    custom_text += """
- │  Maintainer: {}{}│
- │                                      │""".format(maintainer, lenght)
+    custom_text += f"""
+ │  Maintainer: {maintainer}{lenght}│
+ │                                      │"""
 
-    options = {
-        'Files': or_app_options_actions.files,
-        'Description': or_app_options_actions.description,
-        'Return': or_app_options_actions.exit
-    }
+    menu = tui.Menu(custom_text=custom_text)
 
-    args = {
-        'Files': [app_info.files],
-        'Description': app_info.description
-    }
+    menu.items = [
+        ['Files', or_app_options_actions.files, app_info.files],
+        ['Description', or_app_options_actions.description, app_info.description],
+        '',
+        ['Return', or_app_options_actions.exit]
+    ]
 
     while True:
         tui.clean()
-        result = tui.menu(options=options, custom_text=custom_text, args=args)
+        result = menu.run()
         if result:
             return result
 
 def search(query):
     search_results = api.search(query)
     if not search_results:
-        print(" {}No apps found!{}".format(red, reset))
-        tui.press_enter()
+        print(f" {red}No apps found!{reset}")
+        press_enter()
         return "Break"
 
     results = search_results.results
@@ -111,18 +111,18 @@ def search(query):
         print(" │                                      │")
         for i, pkg in ordered_results.items():
             pkg = re.sub("\_\d+.+", "", pkg)
-            _result = "{}. {}".format(i, pkg)
+            _result = f"{i}. {pkg}"
             lenght = " " * int((38 - 2 - len(_result)))
-            print(" │  {}{}│".format(_result, lenght))
+            print(f" │  {_result}{lenght}│")
         print(" │                                      │")
         print(" │  0. Return                           │")
         print(" │                                      │")
         print(" └──────────────────────────────────────┘\n")
-        ask = input("{} Type numbers, ALL or 0:{} ".format(yellow, reset))
+        ask = input(f"{yellow} Type numbers, ALL or 0:{reset} ")
         print()
         
         if not ask.isnumeric():
-            print(" {}Wrong number, select a correct one!{}".format(red, reset))
+            print(f" {red}Wrong number, select a correct one!{reset}")
             print(" ")
             continue
 
@@ -136,7 +136,7 @@ def search(query):
         if ask == "0":
             return
         if not all(num in ordered_results.keys() for num in todl):
-            print(" {}Wrong number, select a correct one!{}".format(red, reset))
+            print(f" {red}Wrong number, select a correct one!{reset}")
             print(" ")
             continue
         i = todl[0]
