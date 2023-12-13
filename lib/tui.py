@@ -3,7 +3,8 @@ from time import sleep
 import re
 
 from ._tui import _menu, get_raw_string
-from .small_libs import clean
+from ._tui.paged_menu import PagedMenu
+from .small_libs import clean, isodd
 
 # Defining some colors.
 cyan = '\033[38;5;104m'
@@ -45,7 +46,7 @@ def frame_around_text(text, width=38):
 
         raw_line = get_raw_string(line)
 
-        if len(raw_line) % 2 != 0:
+        if isodd(raw_line):
             if list(raw_line)[0].isalpha():
                 line += " "
             else:
@@ -132,7 +133,7 @@ def frame(text=None, custom_text=None, width=38, end='\n', second_frame=False, c
 
                 raw_line = get_raw_string(line)
 
-                if len(raw_line) % 2 != 0:
+                if isodd(raw_line):
                     if list(raw_line)[0].isalpha():
                         line += " "
                     else:
@@ -155,7 +156,7 @@ def frame(text=None, custom_text=None, width=38, end='\n', second_frame=False, c
 
                 raw_line = get_raw_string(line)
 
-                if len(raw_line) % 2 != 0:
+                if isodd(raw_line):
                     if list(raw_line)[0].isalpha():
                         line += " "
                     else:

@@ -5,6 +5,7 @@ from urllib.parse import quote
 from ..small_libs import red, reset, blink, cyan, yellow, re_decoder, press_enter
 from .. import apt
 from .. import tui
+from lib._tui.paged_menu import PagedMenu
 from ..dbc import categories
 
 class AppOptionsActions:
@@ -173,6 +174,7 @@ def app(package):
             ['Uninstall', app_options_actions.uninstall, package],
             ['Download', app_options_actions.download, package],
             ['Download with browser', app_options_actions.open_with_browser, link],
+            '',
             ['Return', app_options_actions.exit]
         ]
 
@@ -182,6 +184,7 @@ def app(package):
             ['Download & install', app_options_actions.download_install, package],
             ['Download', app_options_actions.download, package],
             ['Download with browser', app_options_actions.open_with_browser, link],
+            '',
             ['Return', app_options_actions.exit]
         ]
 
@@ -195,6 +198,13 @@ def app(package):
 
 def show_apps(category="full"):
 
+    def show_app(package):
+        while True:
+            result = app(package)
+            if result:
+                break
+
+
     our_db = categories[category]["db"]
 
     numbers = []
@@ -204,151 +214,22 @@ def show_apps(category="full"):
         numbers.append(str(i))
         db_list.append(pkg)
 
-    tui.clean()
-    print(" ┌──────────────────────────────────────┐")
-    print(" │                                      │")
-    print(" │         ╔════════════════════╗       │")
-    print(" │         ║  List of packages: ║       │")
-    print(" │         ╚════════════════════╝       │")
-    print(" │                                      │")
-    print(" │ (Se)arch                             │")
+    menu = PagedMenu(repeat=-1)
+
+    for pkg in db_list:
+        menu.items.append(
+            [
+                pkg,
+                show_app,
+                pkg
+            ]
+        )
+
+    menu.items.append(('Return', app_options_actions.exit))
     
-    rang_first = 0
-    rang_last = 10
-
-    proceeded = 0
-
-    _break = None
+    menu.commit()
 
     while True:
-
-        left = (len(db_list) - proceeded)
-        if left < 10:
-            for i in range(-1, -left-1, -1):
-                pkg = db_list[i]
-                number = numbers[i]
-                pkg_name = our_db[pkg]['display_name']
-                text = f" {number}. {pkg_name}"
-                if len(text) % 2 != 0:
-                    text += " "
-                length = " " * int(38 - len(text))
-                print(f" │{text}{length}│")
-            
-            while True:
-                answer = input(f"{cyan} \nInsert umber to show app,\n 0 to exit:{reset} ")
-                print()
-
-                if answer == "0":
-                    _break = True
-                    break
-                elif answer.lower() == "se":
-                    _ = ask_for_search(category)
-                    answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
-                    if answer.lower() == "y":
-                        return "Break"
-                    else:
-                        break
-                else:
-                    if not answer.isnumeric():
-                        print(f" {red}Answer should be number or Enter{reset}")
-                        continue
-                    if answer not in numbers:
-                        print(f" {red}Wrong number!{reset}")
-                        continue
-
-                    while True:
-                        _ = app(db_list[numbers.index(answer)])
-                        if _ == "Break":
-
-                            answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
-                            if answer.lower() == "y":
-                                return "Break"
-                            else:
-                                break
-
-        if _break:
-            _break = None
-            break
-
-        for i in range(rang_first, rang_last):
-            pkg = db_list[i]
-            number = numbers[i]
-            pkg_name = our_db[pkg]['display_name']
-            
-            text = f" {number}. {pkg_name}"
-            if len(text) % 2 != 0:
-                text += " "
-            length = " " * int(38 - len(text))
-            print(f" │{text}{length}│")
-        rang_first += 10
-        rang_last += 10
-        proceeded += 10
-
-        while True:
-            answer = input(f"{cyan} \nEnter to more, number to show app,\n 0 to exit:{reset} ")
-            print()
-
-            if answer == "":
-                break
-            elif answer == "0":
-                return "Break"
-            
-            elif answer.lower() == "se":
-                _ = ask_for_search(category)
-                answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
-                if answer.lower() == "y":
-                    return "Break"
-                else:
-                    break
-
-            else:
-                if not answer.isnumeric():
-                    print(f" {red}Answer should be number or Enter{reset}")
-                    continue
-                if answer not in numbers:
-                    print(f" {red}Wrong number{reset}")
-                    continue
-
-                while True:
-                    _ = app(db_list[numbers.index(answer)])
-                    if _ == "Break":
-                        answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
-                        if answer.lower() == "y":
-                            return "Break"
-                        else:
-                            break
-        if _break:
-            _break = None
-            break
-
-    print(f" {cyan}Type number, 0 to return:{reset}\n")
-
-    while True:
-        answer = input()
-
-        if answer == "0":
+        result = menu.show()
+        if result == "Break":
             return "Break"
-
-        elif answer.lower() == "se":
-            _ = ask_for_search(category)
-            answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
-            if answer.lower() == "y":
-                return "Break"
-            else:
-                pass
-
-        else:
-            if not answer.isnumeric():
-                print(f" {red}Answer should be number{reset}")
-                continue
-            if answer not in numbers:
-                print(f" {red}Wrong number{reset}")
-                continue
-
-            while True:
-                _ = app(db_list[numbers.index(answer)])
-                answer = input(f"{cyan} Return to menu (y / Enter)?{reset} ")
-                if answer.lower() == "y":
-                    return "Break"
-                else:
-                    break

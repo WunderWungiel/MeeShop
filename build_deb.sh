@@ -43,14 +43,10 @@ cat > opt/MeeShop/bin/MeeShop <<EOF
 #!/bin/sh
 
 cd /opt/MeeShop
-./main.py
-echo \$? > /tmp/meeshop_status
+./main.py && exit 0
 
-if [ \$(cat "/tmp/meeshop_status") -ne "0" ]; then
-    echo "Please Enter to exit..."
-    read
-fi
-
+echo "Please Enter to exit..."
+read
 exit 0
 EOF
 
@@ -65,7 +61,7 @@ version="$1"
 arch="armel"
 maintainer="Wunder Wungiel <me@wunderwungiel.pl>"
 size=$(LANG=C du -c opt usr | grep total | awk '{print $1}')
-depends="python-3.9.18-opt (= 3.9.18), viu-opt (= 1.4.0)"
+depends="wunderw-python3.11-opt (= 3.11.3-0)"
 section="user/system"
 homepage="http://wunderwungiel.pl"
 description="App store for Nokia N9, built upon Python"

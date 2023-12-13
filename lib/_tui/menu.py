@@ -152,7 +152,7 @@ def _menu(items, text=None, custom_text=None, width=38, space_left=9):
 
                 raw_line = get_raw_string(line)
 
-                if len(raw_line) % 2 != 0:
+                if isodd(raw_line):
                     if list(raw_line)[0].isalpha():
                         line += " "
                     else:

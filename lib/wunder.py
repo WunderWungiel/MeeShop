@@ -1,16 +1,7 @@
 from . import tui
 from .stores.wunder import show_apps, search
-from .small_libs import re_decoder, quit
+from .small_libs import re_decoder, reset, yellow
 from .dbc import categories
-
-blue = '\033[96m'
-red = '\033[31m'
-reset = '\033[0m'
-green = '\033[32m'
-blink = '\033[5m'
-yellow = '\033[33m'
-cyan = '\033[1;36m'
-
 
 class CategoriesActions:
     def __init__(self):

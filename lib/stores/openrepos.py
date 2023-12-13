@@ -2,7 +2,9 @@ import re
 
 from .. import tui
 from .. import api
-from ..small_libs import red, reset, yellow, press_enter
+from .. small_libs import red, reset, yellow, press_enter
+
+from icecream import ic
 
 class ORAppOptionsActions:
     def __init__(self):
@@ -86,7 +88,79 @@ def or_app(link):
         if result:
             return result
 
-def search(query):
+def category_link(name, link):
+    ic(name, link)
+    quit(0)
+    pass
+
+def return_break():
+    return "Break"
+
+def sub_cat_menu(main_cat, sub_categories):
+    menu = tui.Menu()
+        
+    menu.items.append((main_cat[0], category_link, (main_cat[0], main_cat[1])))
+
+    for name in sub_categories.keys():
+
+        menu.items.append(
+            [
+                name,
+                category_link,
+                [name, sub_categories[name]]
+            ]
+        )
+
+    menu.items += ('', ["Return", return_break])
+
+    while True:
+        tui.clean()
+        result = menu.run()
+        if result:
+            return result
+
+def or_categories():
+
+    categories = api.get_categories()
+
+    menu = tui.Menu()
+
+    for name in categories.keys():
+
+        print(name)
+
+        if "categories" in categories[name]:
+            
+            menu.items.append(
+                [
+                    name, 
+                    sub_cat_menu, 
+                    (
+                        (name, categories[name]["link"]),
+                        categories[name]["categories"],
+                    )
+                ]
+            )
+
+        else:
+
+            menu.items.append(
+                [
+                    name,
+                    category_link,
+                    (name, categories[name]["link"])
+                ]
+            )
+    
+    menu.items += ['', ["Return", return_break]]
+
+    while True:
+        tui.clean()
+        result = menu.run()
+        if result:
+            return result
+        
+def or_search(query):
     search_results = api.search(query)
     if not search_results:
         print(f" {red}No apps found!{reset}")

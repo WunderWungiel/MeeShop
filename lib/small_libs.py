@@ -142,3 +142,13 @@ def re_decoder(variable):
     variable = variable.replace("\W", r"\\W")
     variable = variable.replace("\Z", r"\\Z")
     return variable
+
+def remove_duplicates(_list: list) -> list:
+
+    unique_elements = []
+
+    for element in _list:
+        if not element in unique_elements:
+            unique_elements.append(element)
+    
+    return unique_elements

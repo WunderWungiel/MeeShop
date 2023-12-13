@@ -1,6 +1,6 @@
 from . import tui
-from .stores.openrepos import search
-from .small_libs import re_decoder
+from .stores.openrepos import or_search, or_categories
+from .small_libs import re_decoder, quit
 from .dbc import categories
 
 blue = '\033[96m'
@@ -14,6 +14,7 @@ cyan = '\033[1;36m'
 class OptionsActions:
     def __init__(self):
         pass
+    
     def search(self):
         while True:
             tui.clean()
@@ -26,8 +27,16 @@ class OptionsActions:
                 return "Break"
             else:
                 query = re_decoder(query)
-                search(query)
+                or_search(query)
                 tui.clean()
+
+    def categories(self):
+        while True:
+            result = or_categories()
+            print(result)
+            if result:
+                return result
+
     def exit(self):
         return "Exit"
 
@@ -41,6 +50,7 @@ def menu():
 
     menu.items = [
         ['Search', options_actions.search], 
+        ['Categories', options_actions.categories],
         '',
         ['Return', options_actions.exit]
     ]
