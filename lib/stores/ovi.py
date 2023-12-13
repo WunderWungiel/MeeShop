@@ -27,7 +27,7 @@ ovi_app_options_actions = OviAppOptionsActions()
 def ovi_app(file, link):
     tui.clean()
 
-    menu = tui.Menu()
+    menu = tui.TUIMenu()
 
     menu.text = file.replace(".deb", '')
     menu.items = [
@@ -37,9 +37,10 @@ def ovi_app(file, link):
         ['Return', ovi_app_options_actions.exit]
     ]
 
+    menu.commit()
+
     while True:
-        tui.clean()
-        result = menu.run()
+        result = menu.show()
         if result:
             return result
 

@@ -100,7 +100,7 @@ options_actions = OptionsActions()
 
 def first_menu():
 
-    menu = tui.Menu()
+    menu = tui.TUIMenu()
 
     menu.text = '''Welcome to MeeShop
 v0.3.0!'''
@@ -120,8 +120,10 @@ v0.3.0!'''
         ['Exit', quit]
     ]
 
+    menu.commit()
+
     while True:
         tui.clean()
-        result = menu.run()
+        result = menu.show()
         if result:
             return result

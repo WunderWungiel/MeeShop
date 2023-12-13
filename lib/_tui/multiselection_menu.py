@@ -1,10 +1,10 @@
-from ..small_libs import passer, clean, reset, cyan_background, isodd, iseven, split_item
+from ..small_libs import clean, reset, isodd, iseven, split_item
 from .term import get_key, get_raw_string, colors, bg_colors
 
-class Menu:
+class MultiSelectionMenu:
 
     def __init__(self, items, text=None, custom_text=None, width=38, space_left=9, text_color="default", highlight_color="cyan"):
-    
+
         if not items:
             items = []
 
@@ -13,6 +13,7 @@ class Menu:
 
         # The first selected item and first page are the firsts one.
         self.current_chosen = 0
+        self.current_selected = []
 
         # Define a flag that will change to True, if user uses commit() (mandatory)
         self.commited = False
@@ -25,13 +26,15 @@ class Menu:
         self.highlight_color = bg_colors[highlight_color]
 
     def commit(self):
-    
+
         i = 0
-        
+
+        # Define two lists, containing:
+        # - names
+        # - integers (indexes)
+
         self.options_names = []
-        self.options_actions = []
         self.options_integers = []
-        self.options_args = []
 
         # Let's make the real index of items properties.
         # We will retrieve:
@@ -40,42 +43,23 @@ class Menu:
         # - integer of each account, starting with 0
         # - optional arguments to actions.
         # If name of item is empty, or None, it will be replaced with a break between items.
+        
         for name in self.items:
             if not name:
                 self.options_names.append('')
-                self.options_actions.append(passer)
                 self.options_integers.append(None)
-                self.options_args.append([])
                 # In this case we omit adding 1 to i, because this is just a break between items.
-                continue
             else:
                 self.options_names.append(name[0])
-                self.options_actions.append(name[1])
-                # If there are arguments...
-                if len(name) > 2:
-                    args = name[2]
-                    # If it's one argument...
-                    if (
-                        not isinstance(args, list) and
-                        not isinstance(args, tuple) and
-                        not isinstance(args, set)
-                    ):
-                        self.options_args.append([args])
-                    # Elif it's list / tuple / set and has more than ONE argument...
-                    else:
-                        self.options_args.append(args)
-                else:
-                    self.options_args.append([])
                 self.options_integers.append(i)
                 i += 1
 
     def show(self):
-
         clean()
-        
+            
         print(" ┌{}┐".format(self.width * "─"))
         print(" │{}│".format(self.width * " "))
-        
+            
         #
         # Below is true if the text is selected to be proceeded automatically.
         # I.e. in case of text = "Welcome", we will get:
@@ -143,24 +127,28 @@ class Menu:
                 print(f" │{spaces}│")
                 continue
 
-            visible_i = i+1
-
             raw_name = get_raw_string(name)
-            if iseven(len(str(i))):
-                if isodd(raw_name):
-                    name += " "
-            spaces_count = (available - len(raw_name) - len(str(i)))
+            if iseven(raw_name):
+                name += " "
+        
+            spaces_count = (available - len(raw_name) - 2)
             spaces = " " * spaces_count
 
-            parts = split_item(name, i=visible_i)
+            parts = split_item(name, i="  ")
 
             for part_index, part in enumerate(parts):
 
                 if part_index == 0:
                     if self.current_chosen == i:
-                        print(f" │         {self.highlight_color}{self.text_color}{visible_i}. {part[0]}{reset}{part[1] * ' '}  │")
+                        if i in self.current_selected:
+                            print(f" │         {self.highlight_color}{self.text_color}[x] {part[0]}{reset}{part[1] * ' '}  │")
+                        else:
+                            print(f" │         {self.highlight_color}{self.text_color}[ ] {part[0]}{reset}{part[1] * ' '}  │")
                     else:
-                        print(f" │         {self.text_color}{visible_i}. {part[0]}{part[1] * ' '}{reset}  │")
+                        if i in self.current_selected:
+                            print(f" │         {self.text_color}[x] {part[0]}{part[1] * ' '}{reset}  │")
+                        else:
+                            print(f" │         {self.text_color}[ ] {part[0]}{part[1] * ' '}{reset}  │")
 
                 elif part_index == (len(parts) - 1):
                     if self.current_chosen == i:
@@ -173,7 +161,6 @@ class Menu:
                     else:
                         print(f" │  {self.text_color}{part[0]}{reset}  │")
 
-
         print(" │{}│".format(self.width * " "))
         print(" └{}┘".format(self.width * "─"))
 
@@ -184,15 +171,12 @@ class Menu:
         elif key == "up":
             self.current_chosen -= 1
         elif key == "enter":
-            args = self.options_args[self.options_integers.index(self.current_chosen)]
-            if len(args) == 0:
-                result = self.options_actions[self.options_integers.index(self.current_chosen)]()
-            elif len(args) == 1:
-                result = self.options_actions[self.options_integers.index(self.current_chosen)](args[0])
+            return sorted(self.current_selected)
+        elif key == "space":
+            if not self.current_chosen in self.current_selected:
+                self.current_selected.append(self.current_chosen)
             else:
-                result = self.options_actions[self.options_integers.index(self.current_chosen)](*args)
-            if result:
-                return result
+                self.current_selected.remove(self.current_chosen)
         elif key == "end":
             self.current_chosen = self.options_integers[-1]
         elif key == "home":

@@ -4,8 +4,6 @@ from .. import tui
 from .. import api
 from .. small_libs import red, reset, yellow, press_enter
 
-from icecream import ic
-
 class ORAppOptionsActions:
     def __init__(self):
         pass
@@ -23,7 +21,7 @@ class ORAppOptionsActions:
 
         files_options_actions = FilesOptionsActions()
 
-        menu = tui.Menu(text="Files", space_left=5)
+        menu = tui.TUIMenu(text="Files", space_left=5)
 
         for file, link in files.items():
             menu.items.append([
@@ -31,8 +29,10 @@ class ORAppOptionsActions:
             ])
         menu.items += ['', ["Return", files_options_actions.exit]]
 
+        menu.commit()
+
         while True:
-            _ = menu.run()
+            _ = menu.show()
             if _ == "Break":
                 break
 
@@ -73,7 +73,7 @@ def or_app(link):
  │  Maintainer: {maintainer}{lenght}│
  │                                      │"""
 
-    menu = tui.Menu(custom_text=custom_text)
+    menu = tui.TUIMenu(custom_text=custom_text)
 
     menu.items = [
         ['Files', or_app_options_actions.files, app_info.files],
@@ -82,9 +82,10 @@ def or_app(link):
         ['Return', or_app_options_actions.exit]
     ]
 
+    menu.commit()
+
     while True:
-        tui.clean()
-        result = menu.run()
+        result = menu.show()
         if result:
             return result
 
@@ -97,7 +98,7 @@ def return_break():
     return "Break"
 
 def sub_cat_menu(main_cat, sub_categories):
-    menu = tui.Menu()
+    menu = tui.TUIMenu()
         
     menu.items.append((main_cat[0], category_link, (main_cat[0], main_cat[1])))
 
@@ -113,9 +114,10 @@ def sub_cat_menu(main_cat, sub_categories):
 
     menu.items += ('', ["Return", return_break])
 
+    menu.commit()
+
     while True:
-        tui.clean()
-        result = menu.run()
+        result = menu.show()
         if result:
             return result
 
@@ -123,7 +125,7 @@ def or_categories():
 
     categories = api.get_categories()
 
-    menu = tui.Menu()
+    menu = tui.TUIMenu()
 
     for name in categories.keys():
 
@@ -154,9 +156,10 @@ def or_categories():
     
     menu.items += ['', ["Return", return_break]]
 
+    menu.commit()
+
     while True:
-        tui.clean()
-        result = menu.run()
+        result = menu.show()
         if result:
             return result
         

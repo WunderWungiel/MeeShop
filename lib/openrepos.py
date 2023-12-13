@@ -44,7 +44,7 @@ options_actions = OptionsActions()
 
 def menu():
 
-    menu = tui.Menu()
+    menu = tui.TUIMenu()
 
     menu.text = "OpenRepos.net"
 
@@ -55,8 +55,10 @@ def menu():
         ['Return', options_actions.exit]
     ]
 
+    menu.commit()
+
     while True:
         tui.clean()
-        result = menu.run()
+        result = menu.show()
         if result == "Exit":
             return "Break"

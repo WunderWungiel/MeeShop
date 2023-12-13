@@ -1,7 +1,6 @@
 import re
 import requests
 from bs4 import BeautifulSoup
-from icecream import ic
 
 def get_right_link(link):
     link = link.strip()

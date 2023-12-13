@@ -37,7 +37,7 @@ class OptionsActions:
         while True:
             tui.clean()
 
-            menu = tui.Menu(text="Categories:")
+            menu = tui.TUIMenu(text="Categories:")
 
             dbs = {}
 
@@ -50,8 +50,10 @@ class OptionsActions:
             
             menu.items += ['', ["Return", categories_actions.exit]]
 
+            menu.commit()
+
             while True:
-                result = menu.run()
+                result = menu.show()
                 if result:
                     return result
 
@@ -62,7 +64,7 @@ options_actions = OptionsActions()
 
 def menu():
 
-    menu = tui.Menu()
+    menu = tui.TUIMenu()
 
     menu.text = "Welcome to MeeShop!"
 
@@ -73,8 +75,9 @@ def menu():
         ['Return', options_actions.exit]
     ]
 
+    menu.commit()
+
     while True:
-        tui.clean()
-        result = menu.run()
+        result = menu.show()
         if result == "Exit":
             return "Break"

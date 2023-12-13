@@ -38,7 +38,7 @@ try:
     menu = Menu(items=items)
 
     while True:
-        menu.run()
+        menu.show()
 
     # Tutaj wracasz do menu lub wykonujesz inne akcje.
 

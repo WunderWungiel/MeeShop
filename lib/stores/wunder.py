@@ -188,11 +188,13 @@ def app(package):
             ['Return', app_options_actions.exit]
         ]
 
-    menu = tui.Menu(items=items, custom_text=custom_text, space_left=6)
+    menu = tui.TUIMenu(items=items, custom_text=custom_text, space_left=6)
+
+    menu.commit()
 
     while True:
         tui.clean()
-        result = menu.run()
+        result = menu.show()
         if result:
             return result
 
@@ -204,7 +206,6 @@ def show_apps(category="full"):
             if result:
                 break
 
-
     our_db = categories[category]["db"]
 
     numbers = []
@@ -214,7 +215,7 @@ def show_apps(category="full"):
         numbers.append(str(i))
         db_list.append(pkg)
 
-    menu = PagedMenu(repeat=-1)
+    menu = tui.TUIMenu(paged=True, repeat=-1)
 
     for pkg in db_list:
         menu.items.append(

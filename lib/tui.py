@@ -2,8 +2,10 @@ import sys
 from time import sleep
 import re
 
-from ._tui import _menu, get_raw_string
+from ._tui import Menu, get_raw_string
 from ._tui.paged_menu import PagedMenu
+from ._tui.multiselection_menu import MultiSelectionMenu
+from ._tui.multiselection_paged_menu import MultiSelectionPagedMenu
 from .small_libs import clean, isodd
 
 # Defining some colors.
@@ -91,19 +93,92 @@ def rprint(text='', time=0.02, previous_text='', _end="\n\n"):
             sleep(time)
         print(_end, end='')
 
-class Menu:
-    def __init__(self, items=None, text=None, custom_text=None, width=38, space_left=9):
+class TUIMenu:
+    def __init__(
+        self,
+        items=None,
+        text=None,
+        custom_text=None,
+        width=38,
+        space_left=9,
+        text_color="default",
+        highlight_color="cyan",
+        paged=False,
+        multiselection=False,
+        items_on_page=10,
+        repeat=-1
+    ):
+               
         if not items:
             items = []
-        self.items = items
-        self.text = text
-        self.custom_text = custom_text
-        self.width = width
-        self.space_left = space_left
-    def run(self):
-        result = _menu(self.items, self.text, self.custom_text, self.width, self.space_left)
-        if result:
+        
+        self.items, self.text, self.custom_text = items, text, custom_text
+        self.space_left, self.width, self.repeat = space_left, width, repeat
+        self.text_color, self.highlight_color = text_color, highlight_color
+        self.paged, self.multiselection, self.items_on_page = paged, multiselection, items_on_page
+
+    def commit(self):
+        
+        if self.paged:
+            
+            if self.multiselection:
+
+                self.menu = MultiSelectionPagedMenu(
+                    self.items, 
+                    text=self.text,
+                    custom_text=self.custom_text,
+                    width=self.width,
+                    space_left=self.space_left,
+                    text_color=self.text_color,
+                    highlight_color=self.highlight_color
+                )
+
+            else:
+
+                self.menu = PagedMenu(
+                    self.items,
+                    text=self.text,
+                    custom_text=self.custom_text,
+                    width=self.width,
+                    items_on_page=self.items_on_page,
+                    space_left=self.space_left,
+                    repeat=self.repeat,
+                    text_color=self.text_color,
+                    highlight_color=self.highlight_color
+                )
+        else:
+
+            if self.multiselection:
+                
+                self.menu = MultiSelectionMenu(
+                    self.items,
+                    text=self.text,
+                    custom_text=self.custom_text,
+                    width=self.width,
+                    space_left=self.space_left,
+                    text_color=self.text_color,
+                    highlight_color=self.highlight_color
+                )
+
+            else:
+
+                self.menu = Menu(
+                    self.items,
+                    text=self.text,
+                    custom_text=self.custom_text,
+                    width=self.width,
+                    space_left=self.space_left,
+                    text_color=self.text_color,
+                    highlight_color=self.highlight_color
+                )
+
+        self.menu.commit()
+
+    def show(self):
+        result = self.menu.show()
+        if result or result == []:
             return result
+
 
 def frame(text=None, custom_text=None, width=38, end='\n', second_frame=False, clean_screen=True):
     if clean_screen:

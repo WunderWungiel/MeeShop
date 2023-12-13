@@ -21,62 +21,37 @@ colors = {
 
 reset = '\033[0m'
 
-# def get_key():
-#     fd = sys.stdin.fileno()
-#     old_settings = termios.tcgetattr(fd)
-    
-#     while True:
-#         try:
-#             tty.setraw(fd)
-#             ch = sys.stdin.read(1)
-        
-#             if ch == '\x1b':
-#                 ch2 = sys.stdin.read(2)
-#                 if ch2 == "[A":
-#                     return "up"
-#                 elif ch2 == '[B':
-#                     return "down"
-#                 elif ch2 == '[D':
-#                     return "left"
-#                 elif ch2 == '[C':
-#                     return "right"
-#                 elif ch2 == '[F':
-#                     return "end"
-#                 elif ch2 == '[H':
-#                     return "home"
-#             elif ch == "\x03":
-#                 raise KeyboardInterrupt
-#             elif ch == "\r":
-#                 return "enter"
-#             elif ch == " ":
-#                 return "space"
-#         finally:
-#             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
 def get_key():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    
     while True:
         try:
-            event = keyboard.read_event(suppress=True)
-            if event.event_type == keyboard.KEY_UP:
-                if event.name == "up":
+            tty.setraw(fd)
+            ch = sys.stdin.read(1)
+        
+            if ch == '\x1b':
+                ch2 = sys.stdin.read(2)
+                if ch2 == "[A":
                     return "up"
-                elif event.name == "down":
+                elif ch2 == '[B':
                     return "down"
-                elif event.name == "left":
+                elif ch2 == '[D':
                     return "left"
-                elif event.name == "right":
+                elif ch2 == '[C':
                     return "right"
-                elif event.name == "end":
+                elif ch2 == '[F':
                     return "end"
-                elif event.name == "home":
+                elif ch2 == '[H':
                     return "home"
-            elif event.event_type == keyboard.KEY_DOWN:
-                if event.name == "space":
-                    return "space"
-                elif event.name == "enter":
-                    return "enter"
-        except KeyboardInterrupt:
-            raise
+            elif ch == "\x03":
+                raise KeyboardInterrupt
+            elif ch == "\r":
+                return "enter"
+            elif ch == " ":
+                return "space"
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 # Getting raw content of given string without any ANSI sentences.
 def get_raw_string(string):

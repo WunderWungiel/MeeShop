@@ -78,7 +78,7 @@ def rss():
     while True:
         tui.clean()
 
-        menu = tui.Menu()
+        menu = tui.TUIMenu()
         menu.text = "RSS feeds:"
 
         for i, name in zip(countries_numbers, countries_names):
@@ -91,7 +91,7 @@ def rss():
 
         while True:
             tui.clean()
-            result = menu.run()
+            result = menu.show()
             if result:
                 return result
 
@@ -124,7 +124,7 @@ def country_feeds(country, country_file):
 
         tui.clean()
 
-        menu = tui.Menu(space_left=3)
+        menu = tui.TUIMenu(space_left=3)
         menu.text = f"{country} feeds:"
     
         for i, name in zip(numbers, names):
@@ -136,8 +136,10 @@ def country_feeds(country, country_file):
         
         menu.items += ['', ["Return", rss_list_options.exit]]
 
+        menu.commit()
+
         while True:
             tui.clean()
-            result = menu.run()
+            result = menu.show()
             if result:
                 return result
