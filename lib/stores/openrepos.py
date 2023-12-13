@@ -90,7 +90,7 @@ def or_app(link):
             return result
 
 def category_link(name, link):
-    ic(name, link)
+    print(name, link)
     quit(0)
     pass
 
