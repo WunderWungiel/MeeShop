@@ -152,7 +152,7 @@ class Menu:
             spaces_count = (available - len(raw_name) - len(str(i)))
             spaces = " " * spaces_count
 
-            parts = split_item(name, i=visible_i)
+            parts = split_item(name, i=visible_i, width=self.width, space_left=self.space_left)
 
             for part_index, part in enumerate(parts):
 

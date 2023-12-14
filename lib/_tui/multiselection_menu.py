@@ -134,7 +134,7 @@ class MultiSelectionMenu:
             spaces_count = (available - len(raw_name) - 2)
             spaces = " " * spaces_count
 
-            parts = split_item(name, i="  ")
+            parts = split_item(name, i="  ", width=self.width, space_left=self.space_left)
 
             for part_index, part in enumerate(parts):
 

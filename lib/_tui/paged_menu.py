@@ -267,7 +267,7 @@ class PagedMenu:
             spaces = " " * spaces_count
 
             # Retrieve parts of text (if it wouldn't fit in `width`)
-            parts = split_item(name, i=visible_i)
+            parts = split_item(name, i=visible_i, width=self.width, space_left=self.space_left)
 
             for part_index, part in enumerate(parts):
 
