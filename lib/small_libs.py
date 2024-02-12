@@ -77,10 +77,13 @@ def about():
     print(" └──────────────────────────────────────┘ \n")
     input(f"{blink}{cyan} Press Enter to continue... {reset}")
 
-def download_file(link, folder=".", filename=None, prompt=True):
-    print(f" {red}{blink}WAIT!{reset}{red} Downloading...\n{reset}")
-    folder = "."
+def download_file(link, folder=".", filename=None, log=True, prompt=True):
+    if log:
+        print(f" {red}{blink}WAIT!{reset}{red} Downloading...\n{reset}")
+
     folder = os.path.abspath(folder)
+    if not os.path.isdir(folder):
+        os.makedirs(folder)
     try:
         r = urlopen(link)
         total_size_in_bytes = int(r.headers.get('Content-Length', 0))
@@ -95,23 +98,26 @@ def download_file(link, folder=".", filename=None, prompt=True):
                 filename = parts[-1]
 
         path = os.path.join(folder, filename)
-        progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
+        if log:
+            progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
         f = open(path, "wb")
         while True:
             data = r.read(1024)
             if not data:
                 break
-            progress_bar.update(len(data))
+            if log:
+                progress_bar.update(len(data))
             f.write(data)
         
         f.close()
-        progress_bar.close()
+        if log:
+            progress_bar.close()
 
     except (HTTPError, URLError):
         print(f" {red}Error while downloading content!{reset}")
         press_enter()
         return
-    if prompt:
+    if prompt and log:
         print()
         print(f" Saved {filename} in {folder}!\n")
 
@@ -217,3 +223,16 @@ def split_item(text, width=38, space_left=9, i=1):
     parts.append([last_text, last_left])
 
     return parts
+
+def send_notification(text="", title="", icon=""):
+
+    icon = os.path.abspath(icon)
+    if not icon:
+        raise Exception(f"No such file or directory: {icon}")
+
+    subprocess.run(
+        f"source /tmp/session_bus_address.user && dbus-send --print-reply --dest=com.meego.core.MNotificationManager /notificationmanager com.meego.core.MNotificationManager.addNotification uint32:1000 uint32:0 string:'custom' string:'{title}' string:'{text}' string:'' string:'{icon}' uint32:0",
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        shell=True
+    )

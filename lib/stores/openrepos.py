@@ -1,52 +1,75 @@
-import re
-
 from .. import tui
+from ..tui import Item, TUIMenu
 from .. import api
-from .. small_libs import red, reset, yellow, press_enter
+from .. import apt
+from .. small_libs import red, reset, press_enter, download_file, blink, cyan
+import subprocess
+import time
 
-class ORAppOptionsActions:
+class AppOptionsActions:
     def __init__(self):
         pass
+    def download_install(self, package):
+        try:
+            apt.install(package)
+        # apt-get wasn't able to install the package successfully.
+        except Exception as e:
+            print(f" Error {red}{e}{reset}! Report to developer.")
+            input(f"{blink}{cyan} Press Enter to exit... {reset}")
+    def open_with_browser(self, link):
+        subprocess.Popen(["/usr/bin/invoker", "--type=m", "/usr/bin/grob", link], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(1.5)
+        press_enter()
+    def uninstall(self, package):
+        try:
+            apt.uninstall(package)
+        except Exception as e:
+            print(f" Error {red}{e}{reset}! Report to developer.")
+            input(f"{blink}{cyan} Press Enter to exit... {reset}")
+
+app_options_actions = AppOptionsActions()
+
+class OptionsActions:
     def files(self, files):
 
-        print(files)
+        def get_file(file, link):
+            items = [
+                Item('Download', download_file, (link, ".", file)),
+                Item('Download with browser', app_options_actions.open_with_browser, link),
+                '',
+                Item('Return', returns=True)
+            ]
 
-        class FilesOptionsActions:
-            def __init__(self):
-                pass
-            def get_file(self, link):
-                pass
-            def exit(self):
-                return "Break"
+            menu = TUIMenu(items=items, text=file)
 
-        files_options_actions = FilesOptionsActions()
+            return menu
 
-        menu = tui.TUIMenu(text="Files", space_left=5)
+        menu = TUIMenu(text="Files", space_left=9, paged=True, items_on_page=10, repeat=-1)
 
         for file, link in files.items():
-            menu.items.append([
-                file, files_options_actions.get_file, link
-            ])
-        menu.items += ['', ["Return", files_options_actions.exit]]
+            file = file.strip()
+            menu.items.append(
+                Item(
+                    file, 
+                    get_file,
+                    (file, link),
+                    menu=True
+                )
+            )
+        menu.items += Item("Return", returns=True)
 
-        menu.commit()
+        return menu
 
-        while True:
-            _ = menu.show()
-            if _ == "Break":
-                break
-
-    def description(self):
-        pass
-
-    def exit(self):
-        return "Break"
+    def description(self, description):
         
-or_app_options_actions = ORAppOptionsActions()
+        description = "\n".join([" " + line for line in description.splitlines()])
+        print(description)
+        print()
+        press_enter()
+        
+options_actions = OptionsActions()
 
 def or_app(link):
-    tui.clean()
-
     app_info = api.get_app_info(link)
     title, stars = app_info.title, app_info.stars
 
@@ -68,158 +91,111 @@ def or_app(link):
 
     maintainer = app_info.author
 
-    lenght = " " * int((38 - 14 - len(maintainer)))
+    lenght = " " * int((38 - 12 - len(maintainer)))
     custom_text += f"""
- │  Maintainer: {maintainer}{lenght}│
+ │  Uploader: {maintainer}{lenght}│
  │                                      │"""
 
-    menu = tui.TUIMenu(custom_text=custom_text)
+    menu = TUIMenu(custom_text=custom_text)
 
     menu.items = [
-        ['Files', or_app_options_actions.files, app_info.files],
-        ['Description', or_app_options_actions.description, app_info.description],
+        Item('Files', options_actions.files, app_info.files, menu=True),
+        Item('Description', options_actions.description, app_info.description),
         '',
-        ['Return', or_app_options_actions.exit]
+        Item('Return', returns=True)
+    ]
+
+    return menu
+
+def category_link(name, link):
+    pass
+
+def sub_cat_menu(main_cat, sub_categories):
+    menu = TUIMenu()
+        
+    menu.items.append(
+        Item(
+            main_cat[0],
+            category_link,
+            (main_cat[0], main_cat[1])
+        )
+    )
+
+    for name in sub_categories.keys():
+
+        menu.items.append(
+            Item(
+                name,
+                category_link,
+                [name, sub_categories[name]]
+            )
+        )
+
+    menu.items += ('', Item("Return", returns=True))
+    
+    return menu
+
+categories = api.get_categories()
+categories_menu = TUIMenu()
+
+for name in categories.keys():
+
+    if "categories" in categories[name]:
+            
+        categories_menu.items.append(
+            Item(
+                name, 
+                sub_cat_menu, 
+                (
+                    (name, categories[name]["link"]),
+                    categories[name]["categories"],
+                ),
+                menu=True
+            )
+        )
+
+    else:
+
+        categories_menu.items.append(
+                Item(
+                    name,
+                    category_link,
+                    (name, categories[name]["link"])
+                )
+            )
+    
+categories_menu.items += ['', Item("Return", returns=True)]
+
+def or_search(query):
+
+    search_results = api.search(query)
+    if not search_results:
+        print(f" {red}No apps found!{reset}")
+        press_enter()
+        return "break"
+
+    results = search_results.results
+
+    menu = TUIMenu(text="Search results", paged=True, items_on_page=10, repeat=-1)
+
+    for result, properties in results.items():
+
+        menu.items.append(
+            Item(
+                result,
+                or_app,
+                properties.get("link"),
+                menu=True
+            )
+        )
+
+    menu.items += [
+        Item('Return', returns=True)
     ]
 
     menu.commit()
 
     while True:
         result = menu.show()
-        if result:
+        if result == "break":
             return result
-
-def category_link(name, link):
-    print(name, link)
-    quit(0)
-    pass
-
-def return_break():
-    return "Break"
-
-def sub_cat_menu(main_cat, sub_categories):
-    menu = tui.TUIMenu()
-        
-    menu.items.append((main_cat[0], category_link, (main_cat[0], main_cat[1])))
-
-    for name in sub_categories.keys():
-
-        menu.items.append(
-            [
-                name,
-                category_link,
-                [name, sub_categories[name]]
-            ]
-        )
-
-    menu.items += ('', ["Return", return_break])
-
-    menu.commit()
-
-    while True:
-        result = menu.show()
-        if result:
-            return result
-
-def or_categories():
-
-    categories = api.get_categories()
-
-    menu = tui.TUIMenu()
-
-    for name in categories.keys():
-
-        print(name)
-
-        if "categories" in categories[name]:
-            
-            menu.items.append(
-                [
-                    name, 
-                    sub_cat_menu, 
-                    (
-                        (name, categories[name]["link"]),
-                        categories[name]["categories"],
-                    )
-                ]
-            )
-
-        else:
-
-            menu.items.append(
-                [
-                    name,
-                    category_link,
-                    (name, categories[name]["link"])
-                ]
-            )
-    
-    menu.items += ['', ["Return", return_break]]
-
-    menu.commit()
-
-    while True:
-        result = menu.show()
-        if result:
-            return result
-        
-def or_search(query):
-    search_results = api.search(query)
-    if not search_results:
-        print(f" {red}No apps found!{reset}")
-        press_enter()
-        return "Break"
-
-    results = search_results.results
-    ordered_results = {}
-
-    for i, result in enumerate(results.keys(), start=1):
-        ordered_results[str(i)] = result
-
-    tui.clean()
-
-    while True:
-        tui.clean()
-        print(" ┌──────────────────────────────────────┐")
-        print(" │                                      │")
-        print(" │         ╔══════════════════╗         │")
-        print(" │         ║  Search results: ║         │")
-        print(" │         ╚══════════════════╝         │")
-        print(" │                                      │")
-        for i, pkg in ordered_results.items():
-            pkg = re.sub("\_\d+.+", "", pkg)
-            _result = f"{i}. {pkg}"
-            lenght = " " * int((38 - 2 - len(_result)))
-            print(f" │  {_result}{lenght}│")
-        print(" │                                      │")
-        print(" │  0. Return                           │")
-        print(" │                                      │")
-        print(" └──────────────────────────────────────┘\n")
-        ask = input(f"{yellow} Type numbers, ALL or 0:{reset} ")
-        print()
-        
-        if not ask.isnumeric():
-            print(f" {red}Wrong number, select a correct one!{reset}")
-            print(" ")
-            continue
-
-        todl = ask.split(" ")
-        todl = list(set(todl))
-        todl = sorted([int(x) for x in todl if x.isdigit()])
-        todl = list(map(str, todl))
-
-        if not ask:
-            continue
-        if ask == "0":
-            return
-        if not all(num in ordered_results.keys() for num in todl):
-            print(f" {red}Wrong number, select a correct one!{reset}")
-            print(" ")
-            continue
-        i = todl[0]
-        link = results[ordered_results.get(i)]['link']
-        while True:
-            _ = or_app(link=link)
-            if _ == "Break":
-                break
-        tui.clean()

@@ -1,0 +1,4 @@
+#!/bin/sh
+
+dpkg-query -s "$1" && exit 0
+exit 1

@@ -100,6 +100,8 @@ def get_search_results(soup):
                 current_page_i = li.text
                 current_page_link = "/search/node/meecast?page={}".format(str(int(current_page_i) - 1))
                 continue
+            elif "pager-ellipsis" in li.get('class'):
+                break # Temporary, to be fixed
             pages_a_match = li.find('a')
             pages_i = pages_a_match.text
             pages_link = pages_a_match.get('href')

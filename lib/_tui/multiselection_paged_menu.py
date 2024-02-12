@@ -1,6 +1,5 @@
-from ..small_libs import clean, reset, isodd, iseven
+from ..small_libs import clean, reset, isodd, iseven, split_item
 from .term import get_key, get_raw_string, colors, bg_colors
-from .menu import split_item
 
 class MultiSelectionPagedMenu:
     def __init__(self, items=None, text=None, custom_text=None, width=38, items_on_page=10, space_left=9, text_color="default", highlight_color="cyan"):

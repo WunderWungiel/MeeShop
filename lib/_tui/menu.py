@@ -1,5 +1,6 @@
-from ..small_libs import passer, clean, reset, cyan_background, isodd, iseven, split_item
+from ..small_libs import clean, reset, isodd, iseven, split_item
 from .term import get_key, get_raw_string, colors, bg_colors
+import time
 
 class Menu:
 
@@ -23,52 +24,51 @@ class Menu:
             raise Exception(f"Specified color doesn't exist.\n{bg_colors.keys()}")
         self.text_color = colors[text_color]
         self.highlight_color = bg_colors[highlight_color]
+        
+        self.TUIMenu = None
+        self.Menu = None
+        self.PagedMenu = None
+        self.MultiSelectionMenu = None
+        self.MultiSelectionPagedMenu = None
 
     def commit(self):
-    
-        i = 0
-        
-        self.options_names = []
-        self.options_actions = []
-        self.options_integers = []
-        self.options_args = []
 
         # Let's make the real index of items properties.
         # We will retrieve:
         # - names of items
         # - actions to do in case of selecting items
-        # - integer of each account, starting with 0
         # - optional arguments to actions.
         # If name of item is empty, or None, it will be replaced with a break between items.
-        for name in self.items:
-            if not name:
-                self.options_names.append('')
-                self.options_actions.append(passer)
-                self.options_integers.append(None)
-                self.options_args.append([])
-                # In this case we omit adding 1 to i, because this is just a break between items.
-                continue
-            else:
-                self.options_names.append(name[0])
-                self.options_actions.append(name[1])
-                # If there are arguments...
-                if len(name) > 2:
-                    args = name[2]
-                    # If it's one argument...
-                    if (
-                        not isinstance(args, list) and
-                        not isinstance(args, tuple) and
-                        not isinstance(args, set)
-                    ):
-                        self.options_args.append([args])
-                    # Elif it's list / tuple / set and has more than ONE argument...
-                    else:
-                        self.options_args.append(args)
-                else:
-                    self.options_args.append([])
-                self.options_integers.append(i)
-                i += 1
 
+        i = 0
+
+        self.integers = []
+        self.args = []
+
+        for item in self.items:
+
+            if not item:
+                self.integers.append(None)
+                self.args.append(())
+                continue
+
+            if item.args:
+                # If it's one argument...
+                if (
+                    not isinstance(item.args, list) and
+                    not isinstance(item.args, tuple) and
+                    not isinstance(item.args, set)
+                ):
+                    self.args.append([item.args])
+                # Else if it's list / tuple / set and has more than ONE argument...
+                else:
+                    self.args.append(item.args)
+            else:
+                self.args.append(())
+            
+            self.integers.append(i)
+            i += 1
+                
     def show(self):
 
         clean()
@@ -129,38 +129,38 @@ class Menu:
             print(self.custom_text)
 
         # Finished printing title, now printing items names.
-        for i, name in zip(self.options_integers, self.options_names):
+        for i, item in zip(self.integers, self.items):
 
             if self.current_chosen < 0:
-                self.current_chosen = self.options_integers[-1]
-            elif self.current_chosen > self.options_integers[-1]:
+                self.current_chosen = self.integers[-1]
+            elif self.current_chosen > self.integers[-1]:
                 self.current_chosen = 0
 
             available = self.width - 2 - self.space_left
 
-            if not name:
+            if not item:
                 spaces = self.width * " "
                 print(f" │{spaces}│")
                 continue
 
             visible_i = i+1
 
-            raw_name = get_raw_string(name)
-            if iseven(len(str(i))):
+            raw_name = get_raw_string(item.name)
+            if iseven(len(str(visible_i))):
                 if isodd(raw_name):
-                    name += " "
-            spaces_count = (available - len(raw_name) - len(str(i)))
+                    item.name += " "
+            spaces_count = (available - len(raw_name) - len(str(visible_i)))
             spaces = " " * spaces_count
 
-            parts = split_item(name, i=visible_i, width=self.width, space_left=self.space_left)
+            parts = split_item(item.name, i=visible_i, width=self.width, space_left=self.space_left)
 
             for part_index, part in enumerate(parts):
 
                 if part_index == 0:
                     if self.current_chosen == i:
-                        print(f" │         {self.highlight_color}{self.text_color}{visible_i}. {part[0]}{reset}{part[1] * ' '}  │")
+                        print(f" │{' ' * self.space_left}{self.highlight_color}{self.text_color}{visible_i}. {part[0]}{reset}{part[1] * ' '}  │")
                     else:
-                        print(f" │         {self.text_color}{visible_i}. {part[0]}{part[1] * ' '}{reset}  │")
+                        print(f" │{' ' * self.space_left}{self.text_color}{visible_i}. {part[0]}{part[1] * ' '}{reset}  │")
 
                 elif part_index == (len(parts) - 1):
                     if self.current_chosen == i:
@@ -184,16 +184,48 @@ class Menu:
         elif key == "up":
             self.current_chosen -= 1
         elif key == "enter":
-            args = self.options_args[self.options_integers.index(self.current_chosen)]
-            if len(args) == 0:
-                result = self.options_actions[self.options_integers.index(self.current_chosen)]()
+
+            item = self.items[self.integers.index(self.current_chosen)]
+
+            if item.returns:
+                return "break"
+
+            args = self.args[self.integers.index(self.current_chosen)]
+            action = item.action
+
+            if isinstance(action, (self.TUIMenu, Menu, self.PagedMenu, self.MultiSelectionMenu, self.MultiSelectionPagedMenu)):
+                action.commit()
+                while True:
+                    result = action.show()
+                    if result == "break":
+                        break
+            elif item.menu:
+
+                if len(args) == 0:
+                    menu = action()
+                elif len(args) == 1:
+                    menu = action(args[0])
+                else:
+                    menu = action(*args)
+
+                menu.commit()
+                while True:
+                    result = menu.show()
+                    if result == "break":
+                        break
+
+            elif len(args) == 0:
+                result = action()
             elif len(args) == 1:
-                result = self.options_actions[self.options_integers.index(self.current_chosen)](args[0])
+                result = action(args[0])
             else:
-                result = self.options_actions[self.options_integers.index(self.current_chosen)](*args)
-            if result:
+                result = action(*args)
+            if result == "break":
+                return
+            elif result:
                 return result
+        
         elif key == "end":
-            self.current_chosen = self.options_integers[-1]
+            self.current_chosen = self.last_i
         elif key == "home":
             self.current_chosen = 0

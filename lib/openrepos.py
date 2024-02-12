@@ -1,7 +1,7 @@
+from .tui import TUIMenu, Item
 from . import tui
-from .stores.openrepos import or_search, or_categories
-from .small_libs import re_decoder, quit
-from .dbc import categories
+from .stores.openrepos import or_search, categories_menu
+from .small_libs import re_decoder
 
 blue = '\033[96m'
 red = '\033[31m'
@@ -12,8 +12,6 @@ yellow = '\033[33m'
 cyan = '\033[1;36m'
 
 class OptionsActions:
-    def __init__(self):
-        pass
     
     def search(self):
         while True:
@@ -24,41 +22,21 @@ class OptionsActions:
                 tui.clean()
                 continue
             if query == "0":
-                return "Break"
+                return "break"
             else:
                 query = re_decoder(query)
-                or_search(query)
-                tui.clean()
-
-    def categories(self):
-        while True:
-            result = or_categories()
-            print(result)
-            if result:
-                return result
-
-    def exit(self):
-        return "Exit"
+                while True:
+                    result = or_search(query)
+                    if result:
+                        return
 
 options_actions = OptionsActions()
 
-def menu():
+menu = TUIMenu(text = "OpenRepos.net")
 
-    menu = tui.TUIMenu()
-
-    menu.text = "OpenRepos.net"
-
-    menu.items = [
-        ['Search', options_actions.search], 
-        ['Categories', options_actions.categories],
-        '',
-        ['Return', options_actions.exit]
-    ]
-
-    menu.commit()
-
-    while True:
-        tui.clean()
-        result = menu.show()
-        if result == "Exit":
-            return "Break"
+menu.items = [
+    Item('Search', options_actions.search), 
+    Item('Categories', categories_menu),
+    '',
+    Item('Return', returns=True)
+]

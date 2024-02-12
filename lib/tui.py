@@ -2,11 +2,12 @@ import sys
 from time import sleep
 import re
 
-from ._tui import Menu, get_raw_string
+from ._tui import get_raw_string
+from ._tui.menu import Menu
 from ._tui.paged_menu import PagedMenu
 from ._tui.multiselection_menu import MultiSelectionMenu
 from ._tui.multiselection_paged_menu import MultiSelectionPagedMenu
-from .small_libs import clean, isodd
+from .small_libs import clean, isodd, split_item
 
 # Defining some colors.
 cyan = '\033[38;5;104m'
@@ -93,6 +94,14 @@ def rprint(text='', time=0.02, previous_text='', _end="\n\n"):
             sleep(time)
         print(_end, end='')
 
+class Item:
+    def __init__(self, name="", action=None, args=[], returns=False, menu=False):
+        self.name = name
+        self.action = action
+        self.args = args
+        self.returns = returns
+        self.menu = menu
+
 class TUIMenu:
     def __init__(
         self,
@@ -172,13 +181,18 @@ class TUIMenu:
                     highlight_color=self.highlight_color
                 )
 
+        self.menu.TUIMenu = TUIMenu
+        self.menu.Menu = Menu
+        self.menu.PagedMenu = PagedMenu
+        self.menu.MultiSelectionMenu = MultiSelectionMenu
+        self.menu.MultiSelectionPagedMenu = MultiSelectionPagedMenu
+
         self.menu.commit()
 
     def show(self):
         result = self.menu.show()
         if result or result == []:
             return result
-
 
 def frame(text=None, custom_text=None, width=38, end='\n', second_frame=False, clean_screen=True):
     if clean_screen:

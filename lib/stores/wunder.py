@@ -2,10 +2,10 @@ import subprocess
 import time
 from urllib.parse import quote
 
-from ..small_libs import red, reset, blink, cyan, yellow, re_decoder, press_enter
+from ..small_libs import red, reset, blink, cyan, yellow, re_decoder, press_enter, download_file
 from .. import apt
 from .. import tui
-from lib._tui.paged_menu import PagedMenu
+from ..tui import TUIMenu, Item
 from ..dbc import categories
 
 class AppOptionsActions:
@@ -31,8 +31,6 @@ class AppOptionsActions:
         except Exception as e:
             print(f" Error {red}{e}{reset}! Report to developer.")
             input(f"{blink}{cyan} Press Enter to exit... {reset}")
-    def exit(self):
-        return "Break"
     
 app_options_actions = AppOptionsActions()
 
@@ -40,10 +38,8 @@ def ask_for_search(category):
     tui.clean()
     tui.frame(text="Search:")
     query = input(f"{yellow} Query to search:{reset} ")
-    if not query:
-        return "Break"
-    if query == "0":
-        return "Break"
+    if not query or query == "0":
+        return "break"
     else:
         query = re_decoder(query)
         search(query=query, category=category)
@@ -52,67 +48,38 @@ def search(query, category="full"):
 
     our_db = categories[category]["db"]
 
-    numbers = []
-    results = []
-    packages = {}
+    search_menu = TUIMenu(text="Search results")
 
-    for pkg, dict in our_db.items():
+    results = []
+
+    for dict in our_db.values():
         if query.lower() in dict['display_name'].lower():
             results.append(dict['display_name'])
-    for i, result in enumerate(results, start=1):
-        numbers.append(str(i))
 
     if len(results) == 0:
         print(f" {red}No apps found!{reset}")
         press_enter()
-        return "Break"
+        return "break"
 
     for result in results:
         for key, value in our_db.items():
             if value['display_name'] == result:
-                packages[value['display_name']] = key
+                search_menu.items.append(
+                    Item(
+                        result,
+                        app,
+                        key,
+                        menu=True
+                    )
+                )
+
+    search_menu.items.append(
+        Item("Return", returns=True)
+    )
     
-    while True:
-        tui.clean()
-        print(" ┌──────────────────────────────────────┐")
-        print(" │                                      │")
-        print(" │         ╔══════════════════╗         │")
-        print(" │         ║  Search results: ║         │")
-        print(" │         ╚══════════════════╝         │")
-        print(" │                                      │")
+    search_menu.commit()
 
-        for i, pkg in zip(numbers, results):
-            _result = f"{i}. {pkg}"
-            lenght = " " * int((38 - 2 - len(_result)))
-            print(f" │  {_result}{lenght}│")
-        print(" │                                      │")
-        print(" │  0. Return                           │")
-        print(" │                                      │")
-        print(" └──────────────────────────────────────┘\n")
-        ask = input(f"{yellow} Type numbers, ALL or 0:{reset} ")
-        print()
-        
-        if not ask.isnumeric():
-            print(f" {red}Wrong number, select a correct one!{reset}")
-            print(" ")
-            continue
-
-        todl = ask.split(" ")[0]
-
-        if not ask:
-            continue
-        if ask == "0":
-            return "Break"
-        if not todl in numbers:
-            print(f" {red}Wrong number, select a correct one!{reset}")
-            print(" ")
-            continue
-        package = packages[results[numbers.index(todl)]]
-        while True:
-            _ = app(package=package)
-            if _ == "Break":
-                break
-        tui.clean()
+    return search_menu
 
 def app(package):
     
@@ -120,23 +87,30 @@ def app(package):
 
     tui.clean()
 
-    process = subprocess.run(["viu", "/home/wunderwungiel/Pobrane/abplayer.png", "-h", "3", "-b"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-    icon_list = process.stdout.splitlines()
+    icon = db[package]['icon']
+    if icon:
+        download_file("http://wunderwungiel.pl/MeeGo/openrepos/icons/" + icon, folder="icons", filename=icon, log=False)
+        process = subprocess.run(["viu", f"icons/{icon}", "-h", "3", "-b"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        icon_list = process.stdout.splitlines()
 
-    icon = ""
+        icon = ""
 
-    for i, line in enumerate(icon_list):
-        if i == 0:
-            icon += f" │                {line}                │"
-        else:
-            icon += f"\n │                {line}                │"
+        for i, line in enumerate(icon_list):
+            if i == 0:
+                icon += f" │                {line}                │"
+            else:
+                icon += f"\n │                {line}                │"
     
+        custom_text = icon
+    else:
+        custom_text = ''
+
+
     display_name = db[package]['display_name']
     if len(display_name) % 2 != 0:
         display_name = display_name + " "
     lenght = " " * int((38 - len(display_name)) / 2)
-    
-    custom_text = f"""{icon}
+    custom_text += f"""
  │                                      │
  │{lenght}{display_name}{lenght}│
  │                                      │"""
@@ -171,40 +145,28 @@ def app(package):
 
     if apt.is_installed(package):
         items = [
-            ['Uninstall', app_options_actions.uninstall, package],
-            ['Download', app_options_actions.download, package],
-            ['Download with browser', app_options_actions.open_with_browser, link],
+            Item('Uninstall', app_options_actions.uninstall, package),
+            Item('Download', app_options_actions.download, package),
+            Item('Download with browser', app_options_actions.open_with_browser, link),
             '',
-            ['Return', app_options_actions.exit]
+            Item('Return', returns=True)
         ]
 
     else:
 
         items = [
-            ['Download & install', app_options_actions.download_install, package],
-            ['Download', app_options_actions.download, package],
-            ['Download with browser', app_options_actions.open_with_browser, link],
+            Item('Install', app_options_actions.download_install, package),
+            Item('Download', app_options_actions.download, package),
+            Item('Download with browser', app_options_actions.open_with_browser, link),
             '',
-            ['Return', app_options_actions.exit]
+            Item('Return', returns=True)
         ]
 
-    menu = tui.TUIMenu(items=items, custom_text=custom_text, space_left=6)
+    menu = TUIMenu(items=items, custom_text=custom_text)
 
-    menu.commit()
-
-    while True:
-        tui.clean()
-        result = menu.show()
-        if result:
-            return result
+    return menu
 
 def show_apps(category="full"):
-
-    def show_app(package):
-        while True:
-            result = app(package)
-            if result:
-                break
 
     our_db = categories[category]["db"]
 
@@ -215,22 +177,18 @@ def show_apps(category="full"):
         numbers.append(str(i))
         db_list.append(pkg)
 
-    menu = tui.TUIMenu(paged=True, repeat=-1)
+    menu = TUIMenu(paged=True, repeat=-1)
 
     for pkg in db_list:
         menu.items.append(
-            [
+            Item(
                 pkg,
-                show_app,
-                pkg
-            ]
+                app,
+                pkg,
+                menu=True
+            )
         )
 
-    menu.items.append(('Return', app_options_actions.exit))
+    menu.items.append(Item('Return', returns=True))
     
-    menu.commit()
-
-    while True:
-        result = menu.show()
-        if result == "Break":
-            return "Break"
+    return menu

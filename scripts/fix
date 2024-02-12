@@ -1,0 +1,4 @@
+#!/bin/sh
+
+aegis-apt-get install -f && exit 0
+exit 1

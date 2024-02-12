@@ -109,6 +109,7 @@ class DbCreator:
             version = app.find('data').get('ver')
             file = app.find('data').get('deb')
             size = app.find('data').get('size')
+            icon = app.find('data').get('icon')
     
             db[package] = {
                 'file': file,
@@ -116,7 +117,8 @@ class DbCreator:
                 'developer': developer,
                 'package': package,
                 'display_name': display_name,
-                'size': size
+                'size': size,
+                'icon': icon
             }
     
         return db

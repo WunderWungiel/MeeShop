@@ -5,6 +5,7 @@ import subprocess
 from xml.etree import ElementTree as ET
 
 from . import tui
+from .tui import TUIMenu, Item
 from .small_libs import press_enter
 
 blue = '\033[96m'
@@ -15,44 +16,14 @@ blink = '\033[5m'
 yellow = '\033[33m'
 cyan = '\033[1;36m'
 
-class RSSOptions:
-    def __init__(self):
-        pass
+def open_feed(link):
 
-    def feed(self, countries_names, countries_numbers, countries_files, i):
-
-        country = countries_names[countries_numbers.index(i)]
-        country_file = countries_files[countries_numbers.index(i)]
-
-        while True:
-            _ = country_feeds(country, country_file)
-            if _ == "Break":
-                break
-
-    def exit(self):
-        return "Break"
-
-class CountryFeedsOptions:
-    def __init__(self):
-        pass
-
-    def feed(self, links, numbers, i):
-
-        link = links[numbers.index(i)]
-
-        subprocess.Popen(["/usr/bin/invoker", "--type=m", "/usr/bin/grob", link], stdout=subprocess.DEVNULL)
-        time.sleep(1.5)
-        press_enter()
-
-    def exit(self):
-        return "Break"
-
-rss_list_options = RSSOptions()
-country_feeds_options = CountryFeedsOptions()
+    subprocess.Popen(["/usr/bin/invoker", "--type=m", "/usr/bin/grob", link], stdout=subprocess.DEVNULL)
+    time.sleep(1.5)
+    press_enter()
 
 def rss():
 
-    countries_numbers = []
     countries_names = []
     countries_files = []
 
@@ -66,34 +37,27 @@ def rss():
 
     root = ET.fromstring(root_string)
 
-    for i, country in enumerate(root.findall('country'), start=1):
+    for country in root.findall('country'):
         country_name = country.get('name')
         country_file = country.get('file')
 
-        countries_numbers.append(str(i))
         countries_names.append(country_name)
         countries_files.append(country_file)
     
+    menu = TUIMenu()
+    menu.text = "RSS feeds:"
 
-    while True:
-        tui.clean()
-
-        menu = tui.TUIMenu()
-        menu.text = "RSS feeds:"
-
-        for i, name in zip(countries_numbers, countries_names):
-                menu.items.append([
+    for name, file in zip(countries_names, countries_files):
+            menu.items.append(
+                Item(
                     name,
-                    rss_list_options.feed,
-                    [countries_names, countries_numbers, countries_files, i]
-                ])
-        menu.items += ['', ["Return", rss_list_options.exit]]
-
-        while True:
-            tui.clean()
-            result = menu.show()
-            if result:
-                return result
+                    country_feeds,
+                    (name, file),
+                    menu=True
+                )
+            )
+    menu.items += ['', Item("Return", returns=True)]
+    return menu
 
 def country_feeds(country, country_file):
 
@@ -102,44 +66,33 @@ def country_feeds(country, country_file):
     except (URLError, HTTPError):
         print(f" {red}Error while downloading content!{reset}")
         press_enter()
-        return "Break"
+        return "break"
     
     root_string = r.read().decode("utf-8")
     root = ET.fromstring(root_string)
 
-    while True:
+    names = []
+    links = []
 
-        numbers = []
-        names = []
-        links = []
+    for rss in root.findall('rss'):
+        name = rss.get('name')
+        url = rss.get('url')
 
-        for rss in root.findall('rss'):
-            number = rss.get('num')
-            name = rss.get('name')
-            url = rss.get('url')
+        names.append(name)
+        links.append(url)
 
-            numbers.append(number)
-            names.append(name)
-            links.append(url)
-
-        tui.clean()
-
-        menu = tui.TUIMenu(space_left=3)
-        menu.text = f"{country} feeds:"
+    menu = TUIMenu(space_left=3)
+    menu.text = f"{country} feeds:"
     
-        for i, name in zip(numbers, names):
-            menu.items.append([
+    for name, link in zip(names, links):
+        menu.items.append(
+            Item(
                 name,
-                country_feeds_options.feed,
-                [links, numbers, i]
-            ])
+                open_feed,
+                link
+            )
+        )
         
-        menu.items += ['', ["Return", rss_list_options.exit]]
+    menu.items += ['', Item("Return", returns=True)]
 
-        menu.commit()
-
-        while True:
-            tui.clean()
-            result = menu.show()
-            if result:
-                return result
+    return menu

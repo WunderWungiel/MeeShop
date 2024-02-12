@@ -1,6 +1,6 @@
-from ..small_libs import passer, clean, reset, cyan_background, isodd, iseven, quit, remove_duplicates
+from ..small_libs import clean, reset, isodd, iseven, remove_duplicates, split_item
 from .term import get_key, get_raw_string, colors, bg_colors
-from .menu import split_item
+from icecream import ic
 
 class PagedMenu:
     def __init__(self, items=None, text=None, custom_text=None, width=38, items_on_page=10, space_left=9, repeat=False, text_color="default", highlight_color="cyan"):
@@ -25,6 +25,12 @@ class PagedMenu:
             raise Exception(f"Specified color doesn't exist.\n{bg_colors.keys()}")
         self.text_color = colors[text_color]
         self.highlight_color = bg_colors[highlight_color]
+        
+        self.TUIMenu = None
+        self.Menu = None
+        self.PagedMenu = None
+        self.MultiSelectionMenu = None
+        self.MultiSelectionPagedMenu = None
 
     def commit(self):
         
@@ -36,10 +42,8 @@ class PagedMenu:
         # - integers (indexes)
         # - arguments to be passed to action (list with arguments)
 
-        self.options_names = []
-        self.options_actions = []
-        self.options_integers = []
-        self.options_args = []
+        self.integers = []
+        self.args = []
 
         # Let's make the real index of items properties.
         # We will retrieve:
@@ -49,33 +53,29 @@ class PagedMenu:
         # - optional arguments to actions.
         # If name of item is empty, or None, it will be replaced with a break between items.
 
-        for name in self.items:
-            if not name:
-                self.options_names.append('')
-                self.options_actions.append(passer) # Passer is blank function doing pass.
-                self.options_integers.append(None)
-                self.options_args.append([])
-                # In this case we omit adding 1 to i, because this is just a break between items.
-            else:
-                self.options_names.append(name[0])
-                self.options_actions.append(name[1])
-                # If there are arguments...
-                if len(name) > 2:
-                    args = name[2]
-                    # If it's one argument...
-                    if (
-                        not isinstance(args, list) and
-                        not isinstance(args, tuple) and
-                        not isinstance(args, set)
-                    ):
-                        self.options_args.append([args])
-                    # Else if it's list / tuple / set and has more than ONE argument...
-                    else:
-                        self.options_args.append(args)
+        for item in self.items:
+
+            if not item:
+                self.integers.append(None)
+                self.args.append(())
+                continue
+
+            if item.args:
+                # If it's one argument...
+                if (
+                    not isinstance(item.args, list) and
+                    not isinstance(item.args, tuple) and
+                    not isinstance(item.args, set)
+                ):
+                    self.args.append([item.args])
+                # Else if it's list / tuple / set and has more than ONE argument...
                 else:
-                    self.options_args.append([])
-                self.options_integers.append(i)
-                i += 1
+                    self.args.append(item.args)
+            else:
+                self.args.append(())
+            
+            self.integers.append(i)
+            i += 1
         
         # Do pages split
         self.pages = self.split_by_pages()
@@ -105,18 +105,18 @@ class PagedMenu:
         items_on_page = self.items_on_page if not self.repeat else self.items_on_page - 1
 
         # Count number of full pages
-        normal_parts_lenght = len(self.options_integers) // items_on_page
+        normal_parts_lenght = len(self.integers) // items_on_page
         # Retrieve indexes of items to be put on last page
-        items_left = len(self.options_integers) - normal_parts_lenght * items_on_page
+        items_left = len(self.integers) - normal_parts_lenght * items_on_page
         
         start_index = 0
         
         for i in range(normal_parts_lenght):
             end_index = start_index + items_on_page
-            pages[i] = self.options_integers[start_index:end_index]
+            pages[i] = self.integers[start_index:end_index]
             start_index += items_on_page
 
-        pages[normal_parts_lenght] = self.options_integers[-items_left:]
+        pages[normal_parts_lenght] = self.integers[-items_left:]
 
         return pages
 
@@ -225,10 +225,11 @@ class PagedMenu:
 
         self.indexes = list(range(len(self.current_options_integers)))
 
-        if self.current_chosen < self.indexes[0]:
-            self.current_chosen = self.indexes[-1]
-        elif self.current_chosen > self.indexes[-1]:
-            self.current_chosen = self.indexes[0]
+
+        if self.current_chosen < self.current_options_integers[0]:
+            self.current_chosen = self.current_options_integers[-1]
+        elif self.current_chosen > self.current_options_integers[-1]:
+            self.current_chosen = self.current_options_integers[0]
 
         being_on_repeated = False
 
@@ -243,17 +244,17 @@ class PagedMenu:
                 being_on_repeated = False
 
             visible_i = i+1 if not being_on_repeated else 0
-                
-            name = self.options_names[i]
+
+            name = self.items[i].name
 
             available = self.width - 2 - self.space_left
 
             # In case of a blank line, just print correct amount of spaces,
             # and continue to next iteration.
-            if not name:
-                spaces = self.width * " "
-                print(f" │{spaces}│")
-                continue
+            # if not name:
+            #     spaces = self.width * " "
+            #     print(f" │{spaces}│")
+            #     continue
 
             if being_on_repeated:
                 spaces = self.width * " "
@@ -263,6 +264,7 @@ class PagedMenu:
             if iseven(len(str(visible_i))):
                 if isodd(raw_name):
                     name += " "
+            
             spaces_count = (available - len(raw_name) - len(str(visible_i)))
             spaces = " " * spaces_count
 
@@ -272,18 +274,18 @@ class PagedMenu:
             for part_index, part in enumerate(parts):
 
                 if part_index == 0:
-                    if self.current_chosen == index:
+                    if self.current_chosen == i:
                         print(f" │         {self.highlight_color}{self.text_color}{visible_i}. {part[0]}{reset}{part[1] * ' '}  │")
                     else:
                         print(f" │         {self.text_color}{visible_i}. {part[0]}{part[1] * ' '}{reset}  │")
         
                 elif part_index == (len(parts) - 1):
-                    if self.current_chosen == index:
+                    if self.current_chosen == i:
                         print(f" │  {self.highlight_color}{self.text_color}{part[0]}{reset}{part[1] * ' '}│")
                     else:
                         print(f" │  {self.text_color}{part[0]}{part[1] * ' '}{reset}│")
                 else:
-                    if self.current_chosen == index:
+                    if self.current_chosen == i:
                         print(f" │  {self.highlight_color}{self.text_color}{part[0]}{reset}  │")
                     else:
                         print(f" │  {self.text_color}{part[0]}{reset}  │")
@@ -295,9 +297,26 @@ class PagedMenu:
         key = get_key()
 
         if key == "down":
-            self.current_chosen += 1
+            if self.repeat:
+                if self.current_chosen == self.current_options_integers[-2]:
+                    self.current_chosen = self.current_options_integers[-1]
+                elif self.current_chosen == self.current_options_integers[-1]:
+                    self.current_chosen = self.current_options_integers[0]
+                else:
+                    self.current_chosen += 1
+            else:
+                self.current_chosen += 1
         elif key == "up":
-            self.current_chosen -= 1
+
+            if self.repeat:
+                if self.current_chosen == self.current_options_integers[-1]:
+                    self.current_chosen = self.current_options_integers[-2]
+                elif self.current_chosen == self.current_options_integers[0]:
+                    self.current_chosen = self.current_options_integers[-1]
+                else:
+                    self.current_chosen -= 1
+            else:
+                self.current_chosen -= 1
         elif key == "right":
             self.current_page += 1
             if self.current_page < 0:
@@ -313,17 +332,34 @@ class PagedMenu:
                 self.current_page = 0
             self.current_chosen = 0
         elif key == "enter" or key == "space":
-            user_choose = self.current_options_integers[self.current_chosen]
+            item = self.items[self.integers.index(self.current_chosen)]
 
-            args = self.options_args[self.options_integers.index(user_choose)]
-            if len(args) == 0:
-                result = self.options_actions[self.options_integers.index(user_choose)]()
-            elif len(args) == 1:
-                result = self.options_actions[self.options_integers.index(user_choose)](args[0])
-            else:
-                result = self.options_actions[self.options_integers.index(user_choose)](*args)
-            if result:
-                return result
+            if item.returns:
+                return "break"
+
+            args = self.args[self.integers.index(self.current_chosen)]
+            action = item.action
+
+            if isinstance(action, (self.TUIMenu, self.Menu, PagedMenu, self.MultiSelectionMenu, self.MultiSelectionPagedMenu)):
+                action.commit()
+                while True:
+                    result = action.show()
+                    if result == "break":
+                        break
+            elif item.menu:
+
+                if len(args) == 0:
+                    menu = action()
+                elif len(args) == 1:
+                    menu = action(args[0])
+                else:
+                    menu = action(*args)
+
+                menu.commit()
+                while True:
+                    result = menu.show()
+                    if result == "break":
+                        break
         elif key == "end":
             self.current_chosen = self.current_options_integers[-1]
         elif key == "home":

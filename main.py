@@ -4,8 +4,9 @@ import os
 import subprocess
 
 from lib.tui import rprint
-from lib.first_menu import first_menu
+from lib.first_menu import menu
 from lib.small_libs import quit, green, blink, cyan, reset, red, clean
+import sys
 
 # Defines a simple function to exit app, in case of error.
 def press_enter_to_exit():
@@ -22,8 +23,10 @@ def main():
         # An optional "." is provided, for testing app on PC.
         # In this case, just swap "#" between them.
 
-        folder = "."
-        #folder = "/opt/MeeShop/.cache"
+        if len(sys.argv) > 0 and sys.argv[1] == "--test":
+            folder = "."
+        else:
+            folder = "/opt/MeeShop/.cache"
         if not os.path.isdir(folder):
             if os.path.isfile(folder):
                 os.remove(folder)
@@ -33,7 +36,7 @@ def main():
 
     # Generic Exception would be raised in case of error.
     except Exception as e:
-        print(f"{red} Error while setting workspace...(error: {e}{reset}\n")
+        print(f"{red} Error while setting workspace... (error: {e}{reset}\n")
         press_enter_to_exit()
     else:
         print(f"{green} Done!{reset}\n")
@@ -51,18 +54,18 @@ def main():
     print(" Checking for Aegis-hack...")
 
     # /usr/bin/aegis-apt-get should not exist if Aegis-hack not installed.
-    if not os.path.isfile("/usr/bin/aegis-apt-get"):
-        print(f"{red} Aegis-install hack by CODeRUS needs to be installed.{reset}")
-        print(" Get it here:")
-        print(" http://wunderwungiel.pl/MeeGo/apt-repo/pool/main/hack-installer_1.0.10_armel.deb")
-        press_enter_to_exit()
-    else:
-        rprint(f"{green} Done!{reset}")
+    if not len(sys.argv) > 0:
+        if not os.path.isfile("/usr/bin/aegis-apt-get"):
+            print(f"{red} Aegis-install hack by CODeRUS needs to be installed.{reset}")
+            print(" Get it here:")
+            print(" http://wunderwungiel.pl/MeeGo/apt-repo/pool/main/hack-installer_1.0.10_armel.deb")
+            press_enter_to_exit()
+        else:
+            rprint(f"{green} Done!{reset}")
 
-    # Here we run the first menu in loop, and clean the screen after each execution.
+    # Here we run the first menu in loop.
     while True:
-        first_menu()
-        clean()
+        menu.show()
 
 # Running the main() function.
 if __name__ == "__main__":

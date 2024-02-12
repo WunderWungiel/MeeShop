@@ -5,16 +5,16 @@ from urllib.parse import urljoin
 
 from .tui import rprint
 from .dbc import categories
-from .small_libs import reset, red, green, blink, cyan, press_enter, download_file
+from .small_libs import reset, red, green, blink, cyan, press_enter, download_file, send_notification
 
 full_db = categories["full"]["db"]
 
-folder = "."
-#folder = "/home/user/MyDocs"
+#folder = "."
+folder = "/home/user/MyDocs"
 
 def update():
     try:
-        process = subprocess.run(["apt-get", "update"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        process = subprocess.run(["/opt/MeeShop/scripts/update"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except PermissionError:
         rprint(f"{red} A problem with file permissions.{reset}")
         press_enter()
@@ -93,7 +93,7 @@ def download(package):
 
 def check_update(package):
     try:
-        process = subprocess.run(["LANG=C", "dpkg-query", "-s", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        process = subprocess.run(["/opt/MeeShop/scripts/dpkg-query", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     except PermissionError:
         rprint(f"{red} A problem with file permissions.{reset}")
         press_enter()
@@ -113,7 +113,8 @@ def check_update(package):
         return False
 
 def is_installed(package):
-    process = subprocess.run(["dpkg-query", "-s", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    return True
+    process = subprocess.run(["/opt/MeeShop/scripts/dpkg-query", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     result = process.stdout
     if re.search("Status:.*ok installed.*", result):
         return True
@@ -123,12 +124,13 @@ def is_installed(package):
 def install(package):
 
     display_name = full_db[package]['display_name']
+    version = full_db[package]['version']
 
     print(" Installing...")
     print(" ")
 
     try:
-        process = subprocess.run(["aegis-apt-get", "install", "-y", "--force-yes", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        process = subprocess.run(["/opt/MeeShop/scripts/install", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     except PermissionError:
         rprint(f"{red} A problem with file permissions.{reset}")
         press_enter()
@@ -152,7 +154,7 @@ def install(package):
         return
 
     print()
-    print(f" {green}{display_name} installed!{reset}")
+    send_notification(title="MeeShop", text=f"{display_name} v{version} installed!", icon="/usr/share/icons/hicolor/80x80/apps/MeeShop80.png")
     press_enter()
 
 def ovi_install(display_name, filename):
@@ -161,7 +163,7 @@ def ovi_install(display_name, filename):
     print(" ")
     filepath = os.path.join("/opt/MeeShop/.cache", filename)
     try:
-        process = subprocess.run(["aegis-dpkg", "-i", filepath], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        process = subprocess.run(["/opt/MeeShop/scripts/dpkg_install", filepath], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     except PermissionError:
         rprint(f"{red} A problem with file permissions.{reset}")
         press_enter()
@@ -202,7 +204,7 @@ def ovi_install(display_name, filename):
 def uninstall(package):
     try:
         output = subprocess.call(
-            ["aegis-apt-get autoremove", "--purge", "-y", "--force-yes", package],
+            ["/opt/MeeShop/scripts/uninstall", package],
             env={'LANG': 'C'}
         )
     except PermissionError:
@@ -220,7 +222,7 @@ def uninstall(package):
 def fix():
     
     try:
-        subprocess.call(["aegis-apt-get", "install", "-f"])
+        subprocess.call(["/opt/MeeShop/scripts/fix"])
     except PermissionError:
         rprint(f"{red} A problem with file permissions.{reset}")
         press_enter()

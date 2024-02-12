@@ -1,0 +1,4 @@
+#!/bin/sh
+
+aegis-apt-get update && exit 0
+exit 1

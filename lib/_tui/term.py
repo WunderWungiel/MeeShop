@@ -2,7 +2,6 @@ import sys
 import termios
 import tty
 import re
-import keyboard
 
 bg_colors = {
     "cyan": '\033[48;5;104m',
