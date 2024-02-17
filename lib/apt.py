@@ -113,7 +113,6 @@ def check_update(package):
         return False
 
 def is_installed(package):
-    return False
     process = subprocess.run(["/opt/MeeShop/scripts/dpkg-query", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     result = process.stdout
     if re.search("Status:.*ok installed.*", result):
