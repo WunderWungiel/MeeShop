@@ -2,11 +2,10 @@
 
 Small functions, that do not need additional files for each of them."""
 import subprocess
-from urllib.request import urlopen
-from urllib.error import HTTPError, URLError
 from tqdm import tqdm
 import os
 import re
+import requests
 
 bold = '\033[96m'
 red = '\033[31m'
@@ -85,8 +84,8 @@ def download_file(link, folder=".", filename=None, log=True, prompt=True):
     if not os.path.isdir(folder):
         os.makedirs(folder)
     try:
-        r = urlopen(link)
-        total_size_in_bytes = int(r.headers.get('Content-Length', 0))
+        r = requests.get(link, stream=True)
+        total_size = int(r.headers.get('content-length', 0))
         if not filename:
 
             # Try to get filename from Content-Disposition
@@ -98,28 +97,34 @@ def download_file(link, folder=".", filename=None, log=True, prompt=True):
                 filename = parts[-1]
 
         path = os.path.join(folder, filename)
+
         if log:
-            progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
+            progress_bar = tqdm(total=total_size, unit='B', unit_scale=True)
+        
         f = open(path, "wb")
-        while True:
-            data = r.read(1024)
-            if not data:
-                break
+
+        for data in r.iter_content(1024):
             if log:
                 progress_bar.update(len(data))
             f.write(data)
         
         f.close()
+
+        if total_size != 0 and (log and progress_bar.n != total_size):
+            raise RuntimeError("Could not download file")
+
         if log:
             progress_bar.close()
 
-    except (HTTPError, URLError):
-        print(f" {red}Error while downloading content!{reset}")
+    except requests.exceptions.RequestException as e:
+        print(f" {red}Error while downloading {link}! Error: {e}{reset}")
         press_enter()
         return
     if prompt and log:
         print()
         print(f" Saved {filename} in {folder}!\n")
+
+    return filename
 
 
 # A primitive function to forcibly escape every RegEx-y character in variable.
@@ -226,6 +231,8 @@ def split_item(text, width=38, space_left=9, i=1):
 
 def send_notification(text="", title="", icon=""):
 
+    title, text = title.strip(), text.strip()
+
     icon = os.path.abspath(icon)
     if not icon:
         raise Exception(f"No such file or directory: {icon}")
@@ -236,3 +243,11 @@ def send_notification(text="", title="", icon=""):
         stderr=subprocess.DEVNULL,
         shell=True
     )
+
+def open_file(path):
+    subprocess.run(
+        ["xdg-open", path],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+    

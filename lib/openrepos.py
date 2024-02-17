@@ -1,3 +1,5 @@
+from time import sleep
+
 from .tui import TUIMenu, Item
 from . import tui
 from .stores.openrepos import or_search, categories_menu
@@ -25,6 +27,10 @@ class OptionsActions:
                 return "break"
             else:
                 query = re_decoder(query)
+                if len(query) <= 3:
+                    print(f" {red}Search query has to be 4-letters long or longer!{reset}")
+                    sleep(1)
+                    continue
                 while True:
                     result = or_search(query)
                     if result:

@@ -1,6 +1,5 @@
 from ..small_libs import clean, reset, isodd, iseven, remove_duplicates, split_item
 from .term import get_key, get_raw_string, colors, bg_colors
-from icecream import ic
 
 class PagedMenu:
     def __init__(self, items=None, text=None, custom_text=None, width=38, items_on_page=10, space_left=9, repeat=False, text_color="default", highlight_color="cyan"):
@@ -136,8 +135,12 @@ class PagedMenu:
         # With │ on left and right.
         #
         if self.text:
+
             # Split text into lines, and strip each line.
             lines = self.text.splitlines()
+            lines.append(
+                f"Page: {self.current_page+1} / {len(self.pages)}"
+            )
             lines = [line.strip() for line in lines]
 
             # Get biggest line, using length as key.
@@ -172,28 +175,18 @@ class PagedMenu:
                 middle_frame = f" │{spaces}║{spacje_w_srodku}{line}{spacje_w_srodku}║{spaces}│"
                 print(middle_frame)
 
-                # Print current page title.
-                
-                page_text = f"Page: {self.current_page+1}"
-                if isodd(page_text):
-                    page_text += " "
-                spacje_w_srodku_count = (self.width - len(page_text) - (spaces_count * 2) - 2) // 2
-                spacje_w_srodku = " " * spacje_w_srodku_count
-
-                srodek_ramki = f" │{spaces}║{spacje_w_srodku}{page_text}{spacje_w_srodku}║{spaces}│"
-                print(srodek_ramki)
-
             gora_ramki = f" │{spaces}╚{gora_spacje}╝{spaces}│"
-            print(gora_ramki)        
+            print(gora_ramki)
 
             print(" │{}│".format(self.width * " "))
         # If it's custom text provided, just print it..
         elif self.custom_text:
             print(self.custom_text)
+            print(f"\nPage: {self.current_page+1} / {len(self.pages)}")
 
         else:
             
-            page_text = f"Page: {self.current_page+1}"
+            page_text = f"Page: {self.current_page+1} / {len(self.pages)}"
             spaces_count = (self.width - len(page_text) - 6) // 2
             spaces = " " * spaces_count
             gora_count = self.width - (spaces_count * 2) - 2
@@ -201,7 +194,6 @@ class PagedMenu:
             gora_ramki = f" │{spaces}╔{gora_spacje}╗{spaces}│"
             print(gora_ramki)
         
-            page_text = f"Page: {self.current_page+1}"
             if isodd(page_text):
                 page_text += " "
             spacje_w_srodku_count = (self.width - len(page_text) - (spaces_count * 2) - 2) // 2
@@ -339,6 +331,8 @@ class PagedMenu:
 
             args = self.args[self.integers.index(self.current_chosen)]
             action = item.action
+            if not action:
+                return
 
             if isinstance(action, (self.TUIMenu, self.Menu, PagedMenu, self.MultiSelectionMenu, self.MultiSelectionPagedMenu)):
                 action.commit()
@@ -360,6 +354,19 @@ class PagedMenu:
                     result = menu.show()
                     if result == "break":
                         break
+            
+            elif len(args) == 0:
+                result = action()
+            elif len(args) == 1:
+                result = action(args[0])
+            else:
+                result = action(*args)
+            
+            if result == "break":
+                return
+            elif result:
+                return result
+            
         elif key == "end":
             self.current_chosen = self.current_options_integers[-1]
         elif key == "home":

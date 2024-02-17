@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 from .tui import rprint
 from .dbc import categories
-from .small_libs import reset, red, green, blink, cyan, press_enter, download_file, send_notification
+from .small_libs import quit, reset, red, blink, cyan, press_enter, download_file
 
 full_db = categories["full"]["db"]
 
@@ -14,7 +14,7 @@ folder = "/home/user/MyDocs"
 
 def update():
     try:
-        process = subprocess.run(["/opt/MeeShop/scripts/update"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        process = subprocess.run(["/opt/MeeShop/scripts/update"])
     except PermissionError:
         rprint(f"{red} A problem with file permissions.{reset}")
         press_enter()
@@ -113,7 +113,7 @@ def check_update(package):
         return False
 
 def is_installed(package):
-    return True
+    return False
     process = subprocess.run(["/opt/MeeShop/scripts/dpkg-query", package], env={'LANG': 'C'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     result = process.stdout
     if re.search("Status:.*ok installed.*", result):
@@ -154,10 +154,9 @@ def install(package):
         return
 
     print()
-    send_notification(title="MeeShop", text=f"{display_name} v{version} installed!", icon="/usr/share/icons/hicolor/80x80/apps/MeeShop80.png")
     press_enter()
 
-def ovi_install(display_name, filename):
+def dpkg_install(display_name, filename):
 
     print(" Installing...")
     print(" ")
@@ -198,7 +197,6 @@ def ovi_install(display_name, filename):
         print(" Install them manually.")
      
     print()
-    print(f" {green}{display_name} installed!{reset}")
     press_enter()
 
 def uninstall(package):

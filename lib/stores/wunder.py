@@ -2,7 +2,7 @@ import subprocess
 import time
 from urllib.parse import quote
 
-from ..small_libs import red, reset, blink, cyan, yellow, re_decoder, press_enter, download_file
+from ..small_libs import red, reset, blink, cyan, yellow, re_decoder, press_enter, download_file, send_notification
 from .. import apt
 from .. import tui
 from ..tui import TUIMenu, Item
@@ -11,13 +11,15 @@ from ..dbc import categories
 class AppOptionsActions:
     def __init__(self):
         pass
-    def download_install(self, package):
+    def download_install(self, package, display_name, version, icon):
         try:
             apt.install(package)
         # apt-get wasn't able to install the package successfully.
         except Exception as e:
             print(f" Error {red}{e}{reset}! Report to developer.")
             input(f"{blink}{cyan} Press Enter to exit... {reset}")
+        else:
+            send_notification(title="MeeShop (WunderW)", text=f"{display_name} v{version} installed!", icon=icon)
     def download(self, package):
         apt.download(package)
         press_enter()
@@ -93,28 +95,28 @@ def app(package):
         process = subprocess.run(["viu", f"icons/{icon}", "-h", "3", "-b"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         icon_list = process.stdout.splitlines()
 
-        icon = ""
+        icon_string = ""
 
         for i, line in enumerate(icon_list):
             if i == 0:
-                icon += f" │                {line}                │"
+                icon_string += f" │                {line}                │"
             else:
-                icon += f"\n │                {line}                │"
+                icon_string += f"\n │                {line}                │"
     
-        custom_text = icon
+        custom_text = icon_string + "\n"
     else:
         custom_text = ''
 
+    blank_line = tui.blank_line()
 
     display_name = db[package]['display_name']
-    if len(display_name) % 2 != 0:
-        display_name = display_name + " "
-    lenght = " " * int((38 - len(display_name)) / 2)
-    custom_text += f"""
- │                                      │
- │{lenght}{display_name}{lenght}│
- │                                      │"""
+
+    if custom_text:
+        custom_text += blank_line + "\n"
+    custom_text += tui.frame_around_text(display_name) + "\n"
     
+    custom_text += blank_line
+
     if apt.is_installed(package):
         lenght = " " * int((38 - 13 - len(package)))
         custom_text += f"\n │  Package: {package} ✓{lenght}│"
@@ -155,7 +157,7 @@ def app(package):
     else:
 
         items = [
-            Item('Install', app_options_actions.download_install, package),
+            Item('Install', app_options_actions.download_install, [package, display_name, version, f"icons/{icon}"]),
             Item('Download', app_options_actions.download, package),
             Item('Download with browser', app_options_actions.open_with_browser, link),
             '',

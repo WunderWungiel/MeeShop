@@ -1,10 +1,11 @@
-from urllib.request import urlopen
-from urllib.error import HTTPError, URLError
 from xml.etree import ElementTree as ET
 import os
 import hashlib
+from copy import deepcopy
 
-from .small_libs import reset, red
+import requests
+
+from .small_libs import reset, red, quit
 
 def md5sum(file_path):
     with open(file_path, 'rb') as file:
@@ -23,13 +24,13 @@ class DbCreator:
         self.error = None
 
         try:
-            r = urlopen("http://wunderwungiel.pl/MeeGo/openrepos/categories.xml")
-        except (URLError, HTTPError):
-            print(f" {red}Error downloading categories list...\n{reset}")
+            r = requests.get("http://wunderwungiel.pl/MeeGo/openrepos/categories.xml")
+        except requests.exceptions.RequestException as e:
+            print(f" {red}Error downloading categories list... Error: {e}\n{reset}")
             self.error = True
             return
 
-        categories = r.read().decode("utf-8")
+        categories = r.text
 
         root = ET.fromstring(categories)
 
@@ -48,13 +49,13 @@ class DbCreator:
 
             if os.path.isfile(file):
                 try:
-                    r = urlopen(f"http://wunderwungiel.pl/MeeGo/openrepos/md5/{md5_file}")
-                except (URLError, HTTPError):
-                    print(f" {red}Error downloading MD5 sums...\n{reset}")
+                    r = requests.get(f"http://wunderwungiel.pl/MeeGo/openrepos/md5/{md5_file}")
+                except requests.exceptions.RequestException as e:
+                    print(f" {red}Error downloading MD5 sums... Error: {e}\n{reset}")
                     self.error = True
                     return
 
-                server_md5 = r.read().decode("utf-8")
+                server_md5 = r.text
                 server_md5 = server_md5.split("\n")[0]
                 local_md5 = md5sum(file)
 
@@ -73,7 +74,7 @@ class DbCreator:
         categories["full"] = {
             "name": "Everything"
         }
-        categories["full"]["db"] = categories["apps"]["db"]
+        categories["full"]["db"] = deepcopy(categories["apps"]["db"])
 
         for category in categories.keys():
             if category == "full" or category == "apps":
@@ -89,9 +90,9 @@ class DbCreator:
         
         if download:
             try:
-                r = urlopen(f"http://wunderwungiel.pl/MeeGo/openrepos/{file}")
-            except (URLError, HTTPError):
-                print(f" {red}Error downloading {file}...\n{reset}")
+                r = requests.get(f"http://wunderwungiel.pl/MeeGo/openrepos/{file}")
+            except requests.exceptions.RequestException as e:
+                print(f" {red}Error downloading {file}... Error: {e}\n{reset}")
                 self.error = True
                 return
             with open(file, "w") as f:
@@ -125,18 +126,21 @@ class DbCreator:
 
     def ovi_db_creator(self):
         try:
-            r = urlopen("http://wunderwungiel.pl/MeeGo/.database/Ovi.txt")
-        except (HTTPError, URLError):
-            print(f" {red}Error downloading Ovi database...\n{reset}")
+            r = requests.get("http://wunderwungiel.pl/MeeGo/.database/Ovi.txt")
+        except requests.exceptions.RequestException as e:
+            print(f" {red}Error downloading Ovi database... Error: {e}\n{reset}")
             self.error = True
             return
         with open("Ovi.txt", "w") as f:
-            f.write(r.read().decode("utf-8"))
+            f.write(r.text)
         with open("Ovi.txt", "r") as f:
             ovi_db = f.readlines()
 
         return ovi_db
 
 db_creator = DbCreator()
+if db_creator.error:
+    quit(1)
+
 ovi_db = db_creator.ovi_db
 categories = db_creator.categories

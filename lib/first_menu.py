@@ -1,3 +1,5 @@
+import time
+
 from .tui import TUIMenu, Item
 from . import tui
 from .wunder import menu as wunder_menu
@@ -38,6 +40,7 @@ class OptionsActions:
         clean()
 
     def update_repository(self):
+        time.sleep(1)
         tui.rprint(" Updating repositories...")
         
         result = apt.update()
@@ -69,12 +72,12 @@ class OptionsActions:
             text = f"""{cyan}{bold}Donating{reset}
             
 If you want to donate for my
-small work, you can do it here:
+work, you can do it here:
 
 donationalerts.com/r/WunderWungiel
 
 Thank you for every 
-$, €, £, zł, etc., etc. ♥
+$, €, £, zł ♥
 
 This really motivates.""",
             second_frame=False
@@ -91,8 +94,8 @@ menu.text = '''Welcome to MeeShop
 v0.3.0!'''
 
 menu.items = [
-    Item('OpenRepos', openrepos_menu),
-    Item('WunderW', wunder_menu),
+    Item('OpenRepos', openrepos_menu, menu=True),
+    Item('WunderW', wunder_menu, menu=True),
     Item('Ovi Store', options_actions.ovi),
     '',
     Item('RSS Feeds', rss, menu=True),

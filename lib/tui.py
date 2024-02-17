@@ -64,7 +64,7 @@ def frame_around_text(text, width=38):
     bottom_frame = f" │{spaces}╚{top_spaces}╝{spaces}│"
     output += "\n" + bottom_frame
     
-    return output
+    return output 
 
 def rprint(text='', time=0.02, previous_text='', _end="\n\n"):
     
@@ -256,3 +256,6 @@ def frame(text=None, custom_text=None, width=38, end='\n', second_frame=False, c
         print(" └{}┘ {}".format(width * "─", end))
     elif custom_text:
         print(custom_text)
+
+def blank_line(width=38):
+    return " │{}│".format(width * " ")

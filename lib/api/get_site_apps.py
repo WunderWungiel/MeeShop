@@ -30,8 +30,12 @@ def get_site_apps(link=None, page=None, target=""):
             raise TypeError("Missing argument: page / link")
 
     link = get_right_link(link)
+
     if target and target != "all":
-        link += f"&view_content_types={target}"
+        if "?" in link:
+            link += f"&view_content_types={target}"
+        else:
+            link += f"?view_content_types={target}"
 
     response = requests.get(link)
     text_content = response.text
@@ -40,7 +44,6 @@ def get_site_apps(link=None, page=None, target=""):
     return apps
     
 def get_apps_list(soup):
-    
     
     div2_match = soup.find_all('div', {'class': 'view-content'})
     if not div2_match:

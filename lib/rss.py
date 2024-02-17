@@ -1,10 +1,8 @@
 import time
-from urllib.request import urlopen
-from urllib.error import URLError, HTTPError
 import subprocess
 from xml.etree import ElementTree as ET
+import requests
 
-from . import tui
 from .tui import TUIMenu, Item
 from .small_libs import press_enter
 
@@ -28,12 +26,13 @@ def rss():
     countries_files = []
 
     try:
-        r = urlopen("http://wunderwungiel.pl/MeeGo/.database/.rss/countries.xml")
-    except (URLError, HTTPError):
-        print(f" {red}Error while downloading content!{reset}")
+        r = requests.get("http://wunderwungiel.pl/MeeGo/.database/.rss/countries.xml")
+    except requests.exceptions.RequestException as e:
+        print(f" {red}Error downloading countries list! Error: {e}{reset}")
         press_enter()
-        return
-    root_string = r.read().decode("utf-8")
+        return "break"
+
+    root_string = r.text
 
     root = ET.fromstring(root_string)
 
@@ -62,13 +61,13 @@ def rss():
 def country_feeds(country, country_file):
 
     try:
-        r = urlopen(f"http://wunderwungiel.pl/MeeGo/.database/.rss/{country_file}")
-    except (URLError, HTTPError):
-        print(f" {red}Error while downloading content!{reset}")
+        r = requests.get(f"http://wunderwungiel.pl/MeeGo/.database/.rss/{country_file}")
+    except requests.exceptions.RequestException as e:
+        print(f" {red}Error downloading feeds for {country}! Error: {e}{reset}")
         press_enter()
         return "break"
     
-    root_string = r.read().decode("utf-8")
+    root_string = r.text
     root = ET.fromstring(root_string)
 
     names = []

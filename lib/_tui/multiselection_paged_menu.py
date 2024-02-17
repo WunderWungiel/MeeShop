@@ -142,7 +142,7 @@ class MultiSelectionPagedMenu:
 
                 # Print current page title.
                 
-                page_text = f"Page: {self.current_page+1}"
+                page_text = f"Page: {self.current_page+1} / {len(self.pages)}"
                 if isodd(page_text):
                     page_text += " "
                 spacje_w_srodku_count = (self.width - len(page_text) - (spaces_count * 2) - 2) // 2

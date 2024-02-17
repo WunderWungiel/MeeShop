@@ -21,7 +21,7 @@ def get_right_link(link):
 def search(query):
     
     if len(query) <= 3:
-        raise Exception("Search query should be 3-letters long or more.")
+        raise Exception("Search query should be 4-letters long or more.")
     
     link = f"http://openrepos.net/search/node/{query}"
     

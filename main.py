@@ -20,10 +20,7 @@ def main():
     print(" Setting up workspace...\n")
 
     try:
-        # An optional "." is provided, for testing app on PC.
-        # In this case, just swap "#" between them.
-
-        if len(sys.argv) > 0 and sys.argv[1] == "--test":
+        if len(sys.argv) > 1 and sys.argv[1] == "--test":
             folder = "."
         else:
             folder = "/opt/MeeShop/.cache"
@@ -36,7 +33,7 @@ def main():
 
     # Generic Exception would be raised in case of error.
     except Exception as e:
-        print(f"{red} Error while setting workspace... (error: {e}{reset}\n")
+        print(f"{red} Error while setting workspace... (error: {e}){reset}\n")
         press_enter_to_exit()
     else:
         print(f"{green} Done!{reset}\n")

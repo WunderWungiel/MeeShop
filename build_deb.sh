@@ -26,7 +26,7 @@ fi
 mkdir tmp
 cd tmp
 
-mkdir -p {DEBIAN,usr/share,opt/MeeShop/bin}
+mkdir -p {DEBIAN,usr/share,opt/MeeShop/bin,opt/MeeShop/scripts}
 mkdir -p usr/share/{icons/hicolor/80x80/apps,applications}
 
 cat > usr/share/applications/MeeShop.desktop <<EOF
@@ -55,13 +55,14 @@ cp ../res/splash.png opt/MeeShop/
 
 cp ../main.py opt/MeeShop
 cp -r ../lib opt/MeeShop/
+cp ../scripts/* opt/MeeShop/scripts/
 
 package="meeshop"
 version="$1"
 arch="armel"
 maintainer="Wunder Wungiel <me@wunderwungiel.pl>"
 size=$(LANG=C du -c opt usr | grep total | awk '{print $1}')
-depends="wunderw-python3.11-opt (= 3.11.3-0)"
+depends="wunderw-python3.11-opt (>= 3.11.3-0), wunderw-python3.11-tqdm-opt (>= 4.64.1-0), wunderw-python3.11-bs4-opt (>= 4.12.2-0)"
 section="user/system"
 homepage="http://wunderwungiel.pl"
 description="App store for Nokia N9, built upon Python"

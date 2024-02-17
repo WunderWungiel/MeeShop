@@ -193,6 +193,9 @@ class Menu:
             args = self.args[self.integers.index(self.current_chosen)]
             action = item.action
 
+            if not action:
+                return
+
             if isinstance(action, (self.TUIMenu, Menu, self.PagedMenu, self.MultiSelectionMenu, self.MultiSelectionPagedMenu)):
                 action.commit()
                 while True:
