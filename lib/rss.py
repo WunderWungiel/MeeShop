@@ -4,7 +4,7 @@ from urllib.error import URLError, HTTPError
 import subprocess
 from xml.etree import ElementTree as ET
 import sys
-sys.path.append("/opt/MeeShop/functions")
+sys.path.append("/opt/MeeShop/lib")
 
 from clean import clean
 

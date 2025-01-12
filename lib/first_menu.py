@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/opt/MeeShop/functions")
+sys.path.append("/opt/MeeShop/lib")
 from clean import clean
 from second_menu import second_menu
 import apt

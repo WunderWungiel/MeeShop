@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/opt/MeeShop/functions")
+sys.path.append("/opt/MeeShop/lib")
 from clean import clean
 import app_functions
 from re_decoder import re_decoder

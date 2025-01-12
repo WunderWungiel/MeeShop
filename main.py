@@ -3,7 +3,7 @@
 import os
 import sys
 import subprocess
-sys.path.append("/opt/MeeShop/functions")
+sys.path.append("/opt/MeeShop/lib")
 import dbc
 from clean import clean
 
@@ -42,7 +42,7 @@ def main():
         print(" {}Done!\n{}".format(green, reset))
 
     print(" Testing internet connection...\n")
-    _ = subprocess.call("ping wunderwungiel.pl -c 1 > /dev/null 2>&1", shell=True)
+    _ = subprocess.call("ping gnu.org -c 1 > /dev/null 2>&1", shell=True)
     if _ != 0:
         print(" {}Failed to connect, check your internet connection.\n{}".format(red, reset))
         press_enter_to_exit()

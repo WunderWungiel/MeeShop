@@ -3,7 +3,7 @@ from urllib.parse import quote
 import subprocess
 import time
 import sys
-sys.path.append("/opt/MeeShop/functions")
+sys.path.append("/opt/MeeShop/lib")
 from clean import clean
 import apt
 import dbc

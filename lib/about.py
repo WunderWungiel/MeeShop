@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/opt/MeeShop/functions")
+sys.path.append("/opt/MeeShop/lib")
 from clean import clean
 
 blue = '\033[96m'
@@ -17,7 +17,7 @@ def about():
     print(" ┌──────────────────────────────────────┐")
     print(" │                                      │")
     print(" │      MeeShop© 2023 WunderWungiel     │")
-    print(" │            Version: 0.2.0            │")
+    print(" │            Version: 0.2.1            │")
     print(" │                                      │")
     print(" │      App store for MeeGo Harmattan   │")
     print(" │      written using Python 3.1.       │")
