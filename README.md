@@ -23,7 +23,7 @@ Run the **Terminal** again, and type following commands:
     (enter "rootme" without quotes as password)
     cd /home/user/MyDocs
     aegis-dpkg -i meeshop_RELEASE_armel.deb
-    (replace RELEASE with the proper number, i.e. 0.2.0)
+    (replace RELEASE with the proper number, i.e. 0.2.2)
 If you don't see any errors, you're ready to use MeeShop!
 
 ## How to use
